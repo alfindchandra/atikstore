@@ -152,16 +152,14 @@
                     @forelse($topProducts as $product)
                     <div class="flex items-center justify-between">
                         <div class="flex-1">
-                            <p class="text-sm font-medium text-gray-900">{{ $product['product_name'] }}</p>
+                           <p class="text-sm font-medium text-gray-900">{{ $product->product_name }}</p>
                             <p class="text-xs text-gray-500">
-                                {{ number_format($product['total_quantity'], 0, ',', '.') }} {{ $product['unit_symbol'] }} terjual
+                                {{ number_format($product->total_quantity, 0, ',', '.') }} {{ $product->unit_symbol }} terjual
                             </p>
-                        </div>
-                        <div class="text-right">
                             <p class="text-sm font-semibold text-gray-900">
-                                Rp {{ number_format($product['total_revenue'], 0, ',', '.') }}
+                                Rp {{ number_format($product->total_revenue, 0, ',', '.') }}
                             </p>
-                            <p class="text-xs text-gray-500">{{ $product['transaction_count'] }} transaksi</p>
+                            <p class="text-xs text-gray-500">{{ $product->transaction_count }} transaksi</p>
                         </div>
                     </div>
                     @empty

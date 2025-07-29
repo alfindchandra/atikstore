@@ -171,6 +171,15 @@
                         @error('units')
                             <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                         @enderror
+                        
+                        {{-- Show specific unit field errors --}}
+                        @if($errors->has('units.*'))
+                            @foreach($errors->get('units.*') as $key => $messages)
+                                @foreach($messages as $message)
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @endforeach
+                            @endforeach
+                        @endif
                     </div>
                 </div>
             </div>
@@ -229,6 +238,10 @@
                                 <i class="fas fa-check text-green-500 mr-2 mt-0.5 text-xs"></i>
                                 Barcode harus unik jika diisi
                             </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mr-2 mt-0.5 text-xs"></i>
+                                Satuan dasar memiliki conversion rate = 1
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -237,7 +250,7 @@
                 <div class="card">
                     <div class="card-body">
                         <div class="flex flex-col space-y-3">
-                            <button type="submit" class="btn-primary w-full">
+                            <button type="submit" class="btn-primary w-full" id="submitBtn">
                                 <i class="fas fa-save mr-2"></i>
                                 Simpan Produk
                             </button>
@@ -277,7 +290,7 @@
             <div>
                 <label class="form-label">Harga <span class="text-red-500">*</span></label>
                 <input type="number" name="units[INDEX][price]" class="form-input unit-price" 
-                       min="0" step="0.01" placeholder="0" required>
+                       min="0" step="1" placeholder="0" required>
             </div>
             
             <div>
@@ -289,7 +302,7 @@
             
             <div class="flex items-center">
                 <label class="flex items-center">
-                    <input type="checkbox" name="units[INDEX][is_base_unit]" class="unit-base-checkbox mr-2" 
+                    <input type="checkbox" name="units[INDEX][is_base_unit]" value="1" class="unit-base-checkbox mr-2" 
                            onchange="handleBaseUnitChange(this)">
                     <span class="text-sm text-gray-700">Satuan Dasar</span>
                 </label>
@@ -310,6 +323,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Focus on name input
     document.getElementById('name').focus();
+    
+    // Load old values if exists (validation failed)
+    loadOldValues();
 });
 
 function addUnit() {
@@ -365,11 +381,13 @@ function handleBaseUnitChange(checkbox) {
         const conversionInput = unitItem.querySelector('.unit-conversion');
         conversionInput.value = '1';
         conversionInput.readOnly = true;
+        conversionInput.style.backgroundColor = '#f3f4f6';
     } else {
         // Make conversion rate editable again
         const unitItem = checkbox.closest('.unit-item');
         const conversionInput = unitItem.querySelector('.unit-conversion');
         conversionInput.readOnly = false;
+        conversionInput.style.backgroundColor = '';
     }
     
     updatePreview();
@@ -429,20 +447,26 @@ function updatePreview() {
         return;
     }
     
-    let unitsHtml = '';
+    let unitsHtml = ''; 
     unitItems.forEach(item => {
         const unitSelect = item.querySelector('.unit-select');
         const priceInput = item.querySelector('.unit-price');
+        const conversionInput = item.querySelector('.unit-conversion');
         const isBase = item.querySelector('.unit-base-checkbox').checked;
         
         const unitText = unitSelect.options[unitSelect.selectedIndex]?.text || 'Pilih Satuan';
         const price = priceInput.value ? `Rp ${parseInt(priceInput.value).toLocaleString('id-ID')}` : 'Rp 0';
+        const conversion = conversionInput.value || '1';
         const baseText = isBase ? ' (Dasar)' : '';
         
         unitsHtml += `<div class="flex justify-between">
             <span>${unitText}${baseText}:</span>
             <span class="font-medium text-green-600">${price}</span>
         </div>`;
+        
+        if (!isBase && conversion !== '1') {
+            unitsHtml += `<div class="text-xs text-gray-500 ml-2">1 ${unitText} = ${conversion} satuan dasar</div>`;
+        }
     });
     
     previewUnits.innerHTML = unitsHtml;
@@ -450,40 +474,111 @@ function updatePreview() {
 
 // Form validation
 document.getElementById('productForm').addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Disable submit button to prevent double submission
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...';
+    
     // Check if at least one base unit is selected
     const baseUnits = document.querySelectorAll('.unit-base-checkbox:checked');
     if (baseUnits.length === 0) {
         e.preventDefault();
         showAlert('error', 'Harus ada satu satuan yang dijadikan sebagai satuan dasar');
+        resetSubmitButton();
         return false;
     }
     
     if (baseUnits.length > 1) {
         e.preventDefault();
         showAlert('error', 'Hanya boleh ada satu satuan dasar');
+        resetSubmitButton();
         return false;
     }
     
     // Check if all required fields are filled
     const unitItems = document.querySelectorAll('.unit-item');
     let isValid = true;
+    let errorMessage = '';
     
-    unitItems.forEach(item => {
+    unitItems.forEach((item, index) => {
         const unitSelect = item.querySelector('.unit-select');
         const priceInput = item.querySelector('.unit-price');
         const conversionInput = item.querySelector('.unit-conversion');
         
-        if (!unitSelect.value || !priceInput.value || !conversionInput.value) {
+        if (!unitSelect.value) {
             isValid = false;
+            errorMessage = `Satuan ${index + 1}: Pilih satuan`;
+        } else if (!priceInput.value || parseFloat(priceInput.value) < 0) {
+            isValid = false;
+            errorMessage = `Satuan ${index + 1}: Harga harus diisi dan tidak boleh negatif`;
+        } else if (!conversionInput.value || parseFloat(conversionInput.value) < 0.0001) {
+            isValid = false;
+            errorMessage = `Satuan ${index + 1}: Conversion rate harus diisi dan minimal 0.0001`;
         }
+    });
+    
+    // Check for duplicate units
+    const selectedUnits = [];
+    unitItems.forEach(item => {
+        const unitId = item.querySelector('.unit-select').value;
+        if (unitId && selectedUnits.includes(unitId)) {
+            isValid = false;
+            errorMessage = 'Tidak boleh ada satuan yang sama';
+        }
+        if (unitId) selectedUnits.push(unitId);
     });
     
     if (!isValid) {
         e.preventDefault();
-        showAlert('error', 'Semua field satuan harus diisi');
+        showAlert('error', errorMessage);
+        resetSubmitButton();
         return false;
     }
 });
+
+function resetSubmitButton() {
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Simpan Produk';
+}
+
+function showAlert(type, message) {
+    // You can implement your alert system here
+    // For now, using simple alert
+    alert(message);
+}
+
+// Load old values when validation fails
+function loadOldValues() {
+    @if(old('units'))
+        const oldUnits = @json(old('units'));
+        
+        // Clear existing units
+        document.getElementById('unitsContainer').innerHTML = '';
+        unitIndex = 0;
+        
+        // Add units from old input
+        oldUnits.forEach((unitData, index) => {
+            addUnit();
+            
+            const unitItem = document.querySelectorAll('.unit-item')[index];
+            if (unitItem) {
+                unitItem.querySelector('.unit-select').value = unitData.unit_id || '';
+                unitItem.querySelector('.unit-price').value = unitData.price || '';
+                unitItem.querySelector('.unit-conversion').value = unitData.conversion_rate || '';
+                
+                const checkbox = unitItem.querySelector('.unit-base-checkbox');
+                if (unitData.is_base_unit) {
+                    checkbox.checked = true;
+                    handleBaseUnitChange(checkbox);
+                }
+            }
+        });
+        
+        updatePreview();
+    @endif
+}
 
 // Barcode scanner support
 document.addEventListener('barcodeScan', function(e) {

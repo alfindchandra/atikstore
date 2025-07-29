@@ -63,7 +63,7 @@ class ProductController extends Controller
                 foreach ($request->units as $unitData) {
                     ProductUnit::create([
                         'product_id' => $product->id,
-                        'unit_id' => $unitData['unit_id'],
+                        'unit_id' => $unitData['unit_id'], 
                         'price' => $unitData['price'],
                         'conversion_rate' => $unitData['conversion_rate'],
                         'is_base_unit' => $unitData['is_base_unit'] ?? false,

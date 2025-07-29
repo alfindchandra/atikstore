@@ -13,7 +13,7 @@ class ProductUnit extends Model
     protected $fillable = [
         'product_id',
         'unit_id',
-        'price',
+        'price', 
         'conversion_rate',
         'is_base_unit',
     ];

@@ -24,7 +24,9 @@ class StockController extends Controller
             ->orderBy('name')
             ->get();
 
-        $lowStockProducts = $this->stockService->getLowStockProducts();
+        $lowStockProducts = collect($products)->filter(function ($product) {
+    return $product->isLowStock();
+});
 
         return view('stock.index', compact('products', 'lowStockProducts'));
     }

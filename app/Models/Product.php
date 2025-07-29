@@ -54,19 +54,25 @@ class Product extends Model
         return $this->productUnits()->where('is_base_unit', true)->first();
     }
 
-    public function getTotalStockInBaseUnit()
-    {
-        $baseUnit = $this->getBaseUnit();
-        if (!$baseUnit) return 0;
+   public function getTotalStockInBaseUnit()
+{
+    $baseUnit = $this->getBaseUnit();
+    if (!$baseUnit) return 0;
 
-        return $this->stocks()->sum(function ($stock) use ($baseUnit) {
+    return $this->stocks()
+        ->get()
+        ->sum(function ($stock) {
             $productUnit = $this->productUnits()
                 ->where('unit_id', $stock->unit_id)
                 ->first();
-            
+
+            if (!$productUnit) {
+                return 0;
+            }
+
             return $stock->quantity * $productUnit->conversion_rate;
         });
-    }
+}
 
     public function isLowStock(): bool
     {
