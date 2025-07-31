@@ -9,6 +9,8 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\CashFlowController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\UnitController;
+use App\Http\Controllers\ActionsController;
 
 // Dashboard
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
@@ -28,6 +30,7 @@ Route::patch('products/{product}/toggle', [ProductController::class, 'toggle'])-
 
 // Category Routes
 Route::resource('categories', CategoryController::class)->except(['show']);
+Route::resource('units', UnitController::class)->except(['show']);
 
 // Stock Routes
 Route::prefix('stock')->name('stock.')->group(function () {
@@ -50,12 +53,24 @@ Route::prefix('cashflow')->name('cashflow.')->group(function () {
 
 // Report Routes
 Route::prefix('reports')->name('reports.')->group(function () {
-    Route::get('/', [ReportController::class, 'index'])->name('index');
-    Route::get('/sales', [ReportController::class, 'sales'])->name('sales');
-    Route::get('/stock', [ReportController::class, 'stock'])->name('stock');
-    Route::get('/cashflow', [ReportController::class, 'cashflow'])->name('cashflow');
-    Route::get('/export/sales', [ReportController::class, 'exportSales'])->name('export.sales');
-    Route::get('/export/stock', [ReportController::class, 'exportStock'])->name('export.stock');
+Route::get('/', [ReportController::class, 'index'])->name('index');
+        Route::get('/sales', [ReportController::class, 'sales'])->name('sales');
+        Route::get('/stock', [ReportController::class, 'stock'])->name('stock');
+        Route::get('/cashflow', [ReportController::class, 'cashflow'])->name('cashflow');
+        
+        // Transaction management routes
+        Route::get('/transactions/{transaction}', [ReportController::class, 'viewTransaction'])->name('transactions.view');
+        Route::get('/transactions/{transaction}/edit', [ReportController::class, 'editTransaction'])->name('transactions.edit');
+        Route::put('/transactions/{transaction}', [ReportController::class, 'updateTransaction'])->name('transactions.update');
+        
+        // Export routes
+        Route::get('/export/sales', [ReportController::class, 'exportSales'])->name('export.sales');
+        Route::get('/export/stock', [ReportController::class, 'exportStock'])->name('export.stock');
+   });
+
+// actions
+Route::prefix('actions')->name('actions.')->group(function () {
+    Route::get('/',[ActionsController::class,'index'])->name('index');
 });
 
 // API Routes for AJAX calls

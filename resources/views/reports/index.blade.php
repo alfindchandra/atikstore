@@ -1,161 +1,323 @@
 @extends('layouts.app')
 
-@section('title', 'Laporan')
-
 @section('content')
 <div class="space-y-6">
-    <!-- Header -->
-    <div>
-        <h1 class="text-2xl font-bold text-gray-900">Laporan</h1>
-        <p class="text-gray-600">Lihat berbagai laporan bisnis Anda</p>
+    <!-- Page Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Laporan</h1>
+            <p class="text-gray-600">Analisis dan ringkasan data bisnis</p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{{ route('reports.sales') }}" class="btn-primary">
+                <i class="fas fa-chart-line mr-2"></i>Laporan Penjualan
+            </a>
+            <a href="{{ route('stock.index') }}" class="btn-secondary">
+                <i class="fas fa-warehouse mr-2"></i>Laporan Stok
+            </a>
+            <a href="{{ route('cashflow.index') }}" class="btn-success">
+                <i class="fas fa-money-bill-wave mr-2"></i>Laporan Keuangan
+            </a>
+        </div>
     </div>
 
-    <!-- Report Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Sales Report -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-            <div class="p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="ml-4 flex-1">
-                        <h3 class="text-lg font-medium text-gray-900">Laporan Penjualan</h3>
-                        <p class="text-sm text-gray-500">Analisis penjualan dan pendapatan</p>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <a href="{{ route('reports.sales') }}" class="w-full flex justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
-                        Lihat Laporan
-                    </a>
-                </div>
-            </div>
+    <!-- Filter Section -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="text-lg font-semibold text-gray-900">Filter Laporan</h3>
         </div>
+        <div class="card-body">
+            <form method="GET" action="{{ route('reports.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="form-label">Dari Tanggal</label>
+                    <input type="date" name="date_from" value="{{ $dateFrom }}" class="form-input">
+                </div>
+                <div>
+                    <label class="form-label">Sampai Tanggal</label>
+                    <input type="date" name="date_to" value="{{ $dateTo }}" class="form-input">
+                </div>
+                <div>
+                    <label class="form-label">Jenis Laporan</label>
+                    <select name="report_type" class="form-input">
+                        <option value="sales" {{ $reportType === 'sales' ? 'selected' : '' }}>Penjualan</option>
+                        <option value="cashflow" {{ $reportType === 'cashflow' ? 'selected' : '' }}>Arus Kas</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button type="submit" class="btn-primary w-full">
+                        <i class="fas fa-filter mr-2"></i>Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-        <!-- Stock Report -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-            <div class="p-6">
+    <!-- Summary Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Total Sales -->
+        <div class="card">
+            <div class="card-body">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
                         <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                            </svg>
+                            <i class="fas fa-shopping-cart text-blue-600"></i>
                         </div>
                     </div>
-                    <div class="ml-4 flex-1">
-                        <h3 class="text-lg font-medium text-gray-900">Laporan Stok</h3>
-                        <p class="text-sm text-gray-500">Status dan pergerakan stok produk</p>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Total Penjualan</p>
+                        <p class="text-2xl font-semibold text-gray-900">
+                            Rp {{ number_format($stats['total_sales'], 0, ',', '.') }}
+                        </p>
                     </div>
                 </div>
                 <div class="mt-4">
-                    <a href="{{ route('reports.stock') }}" class="w-full flex justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
-                        Lihat Laporan
-                    </a>
+                    <div class="flex items-center text-sm">
+                        <span class="text-blue-600 font-medium">
+                            {{ $stats['total_transactions'] }} transaksi
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Cash Flow Report -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-            <div class="p-6">
+        <!-- Average Transaction -->
+        <div class="card">
+            <div class="card-body">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-                            <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
+                        <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-receipt text-green-600"></i>
                         </div>
                     </div>
-                    <div class="ml-4 flex-1">
-                        <h3 class="text-lg font-medium text-gray-900">Laporan Arus Kas</h3>
-                        <p class="text-sm text-gray-500">Pemasukan dan pengeluaran</p>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Rata-rata Transaksi</p>
+                        <p class="text-2xl font-semibold text-gray-900">
+                            Rp {{ number_format($stats['average_transaction'], 0, ',', '.') }}
+                        </p>
                     </div>
                 </div>
                 <div class="mt-4">
-                    <a href="{{ route('reports.cashflow') }}" class="w-full flex justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700">
-                        Lihat Laporan
-                    </a>
+                    <div class="flex items-center text-sm text-gray-500">
+                        <span>Per transaksi</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Net Income -->
+        <div class="card">
+            <div class="card-body">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-chart-line text-purple-600"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Laba Bersih</p>
+                        <p class="text-2xl font-semibold {{ $stats['net_income'] >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                            Rp {{ number_format($stats['net_income'], 0, ',', '.') }}
+                        </p>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="flex items-center text-sm text-gray-500">
+                        <span class="mr-3">
+                            <i class="fas fa-arrow-up text-green-500 mr-1"></i>
+                            {{ number_format($stats['total_income'], 0, ',', '.') }}
+                        </span>
+                        <span>
+                            <i class="fas fa-arrow-down text-red-500 mr-1"></i>
+                            {{ number_format($stats['total_expense'], 0, ',', '.') }}
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Quick Stats -->
-    <div class="bg-white rounded-lg shadow-sm">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-lg font-medium text-gray-900">Ringkasan Hari Ini</h2>
+    <!-- Chart Section -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="text-lg font-semibold text-gray-900">
+                Grafik {{ $reportType === 'sales' ? 'Penjualan' : 'Arus Kas' }}
+            </h3>
         </div>
-        <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-green-600">Rp 0</div>
-                    <div class="text-sm text-gray-500">Total Penjualan</div>
+        <div class="card-body">
+            <div class="h-96">
+                <canvas id="reportChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Navigation -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Sales Report Card -->
+        <div class="card hover:shadow-lg transition-shadow cursor-pointer" onclick="window.location.href='{{ route('reports.sales') }}'">
+            <div class="card-body">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-900">Laporan Penjualan</h4>
+                        <p class="text-gray-600 text-sm mt-1">Detail transaksi dan analisis penjualan</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-chart-line text-blue-600 text-xl"></i>
+                    </div>
                 </div>
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-blue-600">0</div>
-                    <div class="text-sm text-gray-500">Transaksi</div>
+                <div class="mt-4 flex items-center text-blue-600 font-medium">
+                    <span>Lihat Detail</span>
+                    <i class="fas fa-arrow-right ml-2"></i>
                 </div>
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-yellow-600">0</div>
-                    <div class="text-sm text-gray-500">Produk Terjual</div>
+            </div>
+        </div>
+
+        <!-- Stock Report Card -->
+        <div class="card hover:shadow-lg transition-shadow cursor-pointer" onclick="window.location.href='{{ route('reports.stock') }}'">
+            <div class="card-body">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-900">Laporan Stok</h4>
+                        <p class="text-gray-600 text-sm mt-1">Monitoring stok dan nilai inventori</p>
+                    </div>
+                    <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-warehouse text-yellow-600 text-xl"></i>
+                    </div>
                 </div>
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-red-600">0</div>
-                    <div class="text-sm text-gray-500">Stok Rendah</div>
+                <div class="mt-4 flex items-center text-yellow-600 font-medium">
+                    <span>Lihat Detail</span>
+                    <i class="fas fa-arrow-right ml-2"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cash Flow Report Card -->
+        <div class="card hover:shadow-lg transition-shadow cursor-pointer" onclick="window.location.href='{{ route('reports.cashflow') }}'">
+            <div class="card-body">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-900">Laporan Keuangan</h4>
+                        <p class="text-gray-600 text-sm mt-1">Arus kas masuk dan keluar</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-money-bill-wave text-green-600 text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center text-green-600 font-medium">
+                    <span>Lihat Detail</span>
+                    <i class="fas fa-arrow-right ml-2"></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Export Options -->
-    <div class="bg-white rounded-lg shadow-sm">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-lg font-medium text-gray-900">Export Laporan</h2>
+    <!-- Period Comparison -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="text-lg font-semibold text-gray-900">Perbandingan Periode</h3>
         </div>
-        <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <h3 class="text-base font-medium text-gray-900 mb-3">Laporan Penjualan</h3>
-                    <div class="space-y-2">
-                        <div class="flex items-center justify-between p-3 border border-gray-200 rounded-md">
-                            <span class="text-sm text-gray-700">Export data penjualan ke Excel</span>
-                            <a href="{{ route('reports.export.sales') }}?format=excel" class="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
-                                Download Excel
-                            </a>
-                        </div>
-                        <div class="flex items-center justify-between p-3 border border-gray-200 rounded-md">
-                            <span class="text-sm text-gray-700">Export data penjualan ke CSV</span>
-                            <a href="{{ route('reports.export.sales') }}?format=csv" class="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
-                                Download CSV
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                
-                <div>
-                    <h3 class="text-base font-medium text-gray-900 mb-3">Laporan Stok</h3>
-                    <div class="space-y-2">
-                        <div class="flex items-center justify-between p-3 border border-gray-200 rounded-md">
-                            <span class="text-sm text-gray-700">Export data stok ke Excel</span>
-                            <a href="{{ route('reports.export.stock') }}?format=excel" class="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
-                                Download Excel
-                            </a>
-                        </div>
-                        <div class="flex items-center justify-between p-3 border border-gray-200 rounded-md">
-                            <span class="text-sm text-gray-700">Export data stok ke CSV</span>
-                            <a href="{{ route('reports.export.stock') }}?format=csv" class="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
-                                Download CSV
-                            </a>
-                        </div>
-                    </div>
-                </div>
+        <div class="card-body">
+            <div class="overflow-x-auto">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Periode</th>
+                            <th>Total Penjualan</th>
+                            <th>Jumlah Transaksi</th>
+                            <th>Rata-rata Transaksi</th>
+                            <th>Pertumbuhan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="font-medium">{{ date('d/m/Y', strtotime($dateFrom)) }} - {{ date('d/m/Y', strtotime($dateTo)) }}</td>
+                            <td>Rp {{ number_format($stats['total_sales'], 0, ',', '.') }}</td>
+                            <td>{{ $stats['total_transactions'] }}</td>
+                            <td>Rp {{ number_format($stats['average_transaction'], 0, ',', '.') }}</td>
+                            <td>
+                                <span class="badge badge-info">Periode Aktif</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Chart
+    const ctx = document.getElementById('reportChart').getContext('2d');
+    const chartData = @json($chartData);
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.map(item => item.formatted_date),
+            datasets: [{
+                label: '{{ $reportType === "sales" ? "Penjualan (Rp)" : "Arus Kas (Rp)" }}',
+                data: chartData.map(item => item.value),
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: 'rgb(59, 130, 246)',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                pointHoverRadius: 7
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: function(context) {
+                            return 'Rp ' + context.parsed.y.toLocaleString('id-ID');
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#6B7280'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: '#F3F4F6'
+                    },
+                    ticks: {
+                        color: '#6B7280',
+                        callback: function(value) {
+                            return 'Rp ' + value.toLocaleString('id-ID');
+                        }
+                    }
+                }
+            },
+            elements: {
+                point: {
+                    hoverBackgroundColor: 'rgb(59, 130, 246)'
+                }
+            }
+        }
+    });
+});
+</script>
 @endsection

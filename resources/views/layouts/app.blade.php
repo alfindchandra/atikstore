@@ -36,17 +36,19 @@
                            class="nav-link {{ request()->routeIs('products.*') ? 'active' : '' }}">
                             <i class="fas fa-box mr-2"></i>Produk
                         </a>
-                        <a href="{{ route('stock.index') }}" 
+                        <a href="{{ route('stock.adjustment') }}" 
                            class="nav-link {{ request()->routeIs('stock.*') ? 'active' : '' }}">
                             <i class="fas fa-warehouse mr-2"></i>Stok
                         </a>
-                        <a href="{{ route('cashflow.index') }}" 
-                           class="nav-link {{ request()->routeIs('cashflow.*') ? 'active' : '' }}">
-                            <i class="fas fa-money-bill-wave mr-2"></i>Keuangan
-                        </a>
+                        
                         <a href="{{ route('reports.index') }}" 
                            class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">
                             <i class="fas fa-chart-bar mr-2"></i>Laporan
+                        </a>
+                        <a href="{{ route('actions.index') }}" 
+                           class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">
+                            <i class="fa-solid fa-boxes-stacked mr-2"></i>Manajemen
+                            
                         </a>
                     </div>
                 </div>
@@ -63,7 +65,7 @@
                     <div class="flex items-center">
                         <span class="text-gray-700 text-sm mr-4">
                             <i class="fas fa-calendar mr-1"></i>
-                            {{ now()->format('d/m/Y H:i') }}
+                        {{ now()->timezone('Asia/Jakarta')->format('d/m/Y H:i') }}
                         </span>
                         <div class="bg-blue-100 rounded-full p-2">
                             <i class="fas fa-user text-blue-600"></i>
@@ -98,7 +100,7 @@
                 </a>
                 <a href="{{ route('reports.index') }}" 
                    class="mobile-nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">
-                    <i class="fas fa-chart-bar mr-2"></i>Laporan
+                    <i class="fas fa-chart-bar mr-2"></i>Manajemen
                 </a>
             </div>
         </div>

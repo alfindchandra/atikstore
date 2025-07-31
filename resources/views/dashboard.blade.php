@@ -3,7 +3,7 @@
 
 @section('content')
 <div class="space-y-6">
-    <!-- Page Header -->
+    <!-- Page Header --> 
     <div class="flex justify-between items-center">
         <div>
             <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
@@ -11,7 +11,7 @@
         </div>
         <div class="text-right">
             <p class="text-sm text-gray-500">Terakhir diperbarui</p>
-            <p class="text-lg font-semibold text-gray-900">{{ now()->format('H:i:s') }}</p>
+            <p class="text-lg font-semibold text-gray-900">{{ now()->timezone('Asia/Jakarta')->format('H:i:s') }}</p>
         </div>
     </div>
 
