@@ -114,126 +114,211 @@
         </div>
     </div>
 
-    <!-- Top Products -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="text-lg font-semibold text-gray-900">Produk Terlaris</h3>
-        </div>
-        <div class="card-body">
-            <div class="overflow-x-auto">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Produk</th>
-                            <th>Jumlah Terjual</th>
-                            <th>Total Pendapatan</th>
-                            <th>Jumlah Transaksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($topProducts as $product)
-                        <tr>
-                            <td class="font-medium">{{ $product->product_name }}</td>
-                            <td>{{ number_format($product->total_quantity, 0, ',', '.') }} {{ $product->unit_symbol }}</td>
-                            <td>Rp {{ number_format($product->total_revenue, 0, ',', '.') }}</td>
-                            <td>{{ $product->transaction_count }}</td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="4" class="text-center py-8 text-gray-500">
-                                <i class="fas fa-inbox text-3xl mb-3"></i>
-                                <p>Tidak ada data produk</p>
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+        <!-- Transactions List -->
+<!-- Transactions List -->
+<div class="card">
+    <div class="card-header">
+        <div class="flex justify-between items-center flex-wrap gap-2">
+            <h3 class="text-lg font-semibold text-gray-900">Daftar Transaksi</h3>
+            <p class="text-sm text-gray-500">
+                Menampilkan {{ $transactions->firstItem() ?? 0 }} - {{ $transactions->lastItem() ?? 0 }} dari {{ $transactions->total() }} transaksi
+            </p>
         </div>
     </div>
 
-    <!-- Transactions List -->
-    <div class="card">
-        <div class="card-header">
-            <div class="flex justify-between items-center">
-                <h3 class="text-lg font-semibold text-gray-900">Daftar Transaksi</h3>
-                <div class="text-sm text-gray-500">
-                    Menampilkan {{ $transactions->firstItem() ?? 0 }} - {{ $transactions->lastItem() ?? 0 }} dari {{ $transactions->total() }} transaksi
+    <div class="card-body p-0">
+        <!-- Desktop Table -->
+        <div class="hidden md:block overflow-x-auto">
+            <table class="min-w-full table-auto text-sm md:text-base text-gray-700">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="px-4 py-3">No. Transaksi</th>
+                        <th class="px-4 py-3">Tanggal</th>
+                        <th class="px-4 py-3">Item</th>
+                        <th class="px-4 py-3 text-right">Total</th>
+                        <th class="px-4 py-3 text-right">Pembayaran</th>
+                        <th class="px-4 py-3">Status</th>
+                        <th class="px-4 py-3">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($transactions as $transaction)
+                    <tr class="hover:bg-gray-50 border-b">
+                        <td class="px-4 py-3 font-medium">{{ $transaction->transaction_number }}</td>
+                        <td class="px-4 py-3">{{ $transaction->transaction_date->format('d/m/Y H:i') }}</td>
+                        <td class="px-4 py-3">
+                            @foreach($transaction->details->take(2) as $detail)
+                                <div>{{ $detail->product->name }} ({{ $detail->quantity }} {{ $detail->unit->symbol }})</div>
+                            @endforeach
+                            @if($transaction->details->count() > 2)
+                                <div class="text-gray-500 text-xs">+{{ $transaction->details->count() - 2 }} item lainnya</div>
+                            @endif
+                        </td>
+                        <td class="px-4 py-3 text-right font-semibold text-green-600">
+                            Rp {{ number_format($transaction->total_amount, 0, ',', '.') }}
+                        </td>
+                        <td class="px-4 py-3 text-right text-blue-600">
+                            Rp {{ number_format($transaction->paid_amount, 0, ',', '.') }}
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="inline-block rounded-full bg-green-100 text-green-700 text-xs px-2 py-1">
+                                {{ ucfirst($transaction->status) }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="flex space-x-2 text-lg">
+                                <button onclick="viewTransaction({{ $transaction->id }})" class="hover:text-blue-600" title="Lihat Detail">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button onclick="editTransaction({{ $transaction->id }})" class="hover:text-green-600" title="Edit Transaksi">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <a href="{{ route('pos.receipt', $transaction) }}" target="_blank" class="hover:text-purple-600" title="Cetak Struk">
+                                    <i class="fas fa-print"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Mobile Card -->
+        <div class="grid grid-cols-1 md:hidden gap-4 p-4">
+            @forelse($transactions as $transaction)
+            <div class="bg-gray-50 border rounded-lg shadow-sm p-4 space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="font-semibold text-gray-900">{{ $transaction->transaction_number }}</span>
+                    <span class="text-xs text-gray-500">{{ $transaction->transaction_date->format('d/m/Y H:i') }}</span>
+                </div>
+                <div class="text-sm text-gray-700 space-y-1">
+                    @foreach($transaction->details->take(2) as $detail)
+                        <div>{{ $detail->product->name }} ({{ $detail->quantity }} {{ $detail->unit->symbol }})</div>
+                    @endforeach
+                    @if($transaction->details->count() > 2)
+                        <div class="text-gray-500 text-xs">+{{ $transaction->details->count() - 2 }} item lainnya</div>
+                    @endif
+                    <div><span class="font-medium">Total:</span> Rp {{ number_format($transaction->total_amount, 0, ',', '.') }}</div>
+                    <div><span class="font-medium">Bayar:</span> Rp {{ number_format($transaction->paid_amount, 0, ',', '.') }}</div>
+                    <div>
+                        <span class="inline-block bg-green-100 text-green-700 text-xs rounded-full px-2 py-1">
+                            {{ ucfirst($transaction->status) }}
+                        </span>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 text-lg pt-2 border-t mt-2">
+                    <button onclick="viewTransaction({{ $transaction->id }})" class="hover:text-blue-600" title="Lihat Detail">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button onclick="editTransaction({{ $transaction->id }})" class="hover:text-green-600" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <a href="{{ route('pos.receipt', $transaction) }}" target="_blank" class="hover:text-purple-600" title="Cetak">
+                        <i class="fas fa-print"></i>
+                    </a>
                 </div>
             </div>
-        </div>
-        <div class="card-body p-0">
-            <div class="overflow-x-auto">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>No. Transaksi</th>
-                            <th>Tanggal</th>
-                            <th>Item</th>
-                            <th>Total</th>
-                            <th>Pembayaran</th>
-                            <th>Status</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($transactions as $transaction)
-                        <tr class="hover:bg-gray-50">
-                            <td class="font-medium">{{ $transaction->transaction_number }}</td>
-                            <td>{{ $transaction->transaction_date->format('d/m/Y H:i') }}</td>
-                            <td>
-                                <div class="text-sm">
-                                    @foreach($transaction->details->take(2) as $detail)
-                                        <div>{{ $detail->product->name }} ({{ $detail->quantity }} {{ $detail->unit->symbol }})</div>
-                                    @endforeach
-                                    @if($transaction->details->count() > 2)
-                                        <div class="text-gray-500">+{{ $transaction->details->count() - 2 }} item lainnya</div>
-                                    @endif
-                                </div>
-                            </td>
-                            <td class="font-semibold">Rp {{ number_format($transaction->total_amount, 0, ',', '.') }}</td>
-                            <td>Rp {{ number_format($transaction->paid_amount, 0, ',', '.') }}</td>
-                            <td>
-                                <span class="badge badge-success">{{ ucfirst($transaction->status) }}</span>
-                            </td>
-                            <td>
-                                <div class="flex space-x-2">
-                                    <button onclick="viewTransaction({{ $transaction->id }})" 
-                                            class="text-blue-600 hover:text-blue-800" title="Lihat Detail">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    <button onclick="editTransaction({{ $transaction->id }})" 
-                                            class="text-green-600 hover:text-green-800" title="Edit Transaksi">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <a href="{{ route('pos.receipt', $transaction) }}" 
-                                       class="text-purple-600 hover:text-purple-800" title="Cetak Struk" target="_blank">
-                                        <i class="fas fa-print"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="7" class="text-center py-12">
-                                <div class="text-gray-500">
-                                    <i class="fas fa-receipt text-4xl mb-4"></i>
-                                    <p class="text-lg font-medium">Tidak ada transaksi</p>
-                                    <p class="text-sm">Belum ada transaksi pada periode yang dipilih</p>
-                                </div>
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+            @empty
+            <div class="text-center text-gray-500 py-8">
+                <i class="fas fa-receipt text-3xl mb-3"></i>
+                <p class="font-semibold">Tidak ada transaksi</p>
+                <p class="text-sm">Belum ada transaksi pada periode yang dipilih</p>
             </div>
+            @endforelse
         </div>
-        @if($transactions->hasPages())
-        <div class="card-body border-t">
+    </div>
+
+    @if($transactions->hasPages())
+    <div class="card-body border-t">
+        <div class="flex justify-center">
             {{ $transactions->appends(request()->query())->links() }}
+        </div>
+    </div>
+    @endif
+</div>
+
+
+<!-- Top Products -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="text-lg font-semibold text-gray-900">Produk Terlaris</h3>
+    </div>
+    <div class="card-body">
+        @if($topProducts->count())
+        <div class="hidden md:block overflow-x-auto">
+            <table class="min-w-full table-auto text-sm md:text-base text-gray-700">
+                <thead class="bg-gray-100 text-left">
+                    <tr>
+                        <th class="px-4 py-3">Produk</th>
+                        <th class="px-4 py-3 text-right">Jumlah Terjual</th>
+                        <th class="px-4 py-3 text-right">Total Pendapatan</th>
+                        <th class="px-4 py-3 text-right">Jumlah Transaksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($topProducts as $product)
+                    <tr class="border-b hover:bg-gray-50 transition">
+                        <td class="px-4 py-3 font-medium text-gray-900">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-gray-100 rounded-md flex items-center justify-center text-gray-400">
+                                    <i class="fas fa-box"></i>
+                                </div>
+                                <div>
+                                    <div>{{ $product->product_name }}</div>
+                                    <div class="text-xs text-gray-500">{{ $product->unit_symbol }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 text-right font-semibold">
+                            {{ number_format($product->total_quantity, 0, ',', '.') }} {{ $product->unit_symbol }}
+                        </td>
+                        <td class="px-4 py-3 text-right text-green-600 font-semibold">
+                            Rp {{ number_format($product->total_revenue, 0, ',', '.') }}
+                        </td>
+                        <td class="px-4 py-3 text-right">
+                            {{ $product->transaction_count }}
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Mobile Card Version -->
+        <div class="grid grid-cols-1 md:hidden gap-4">
+            @foreach($topProducts as $product)
+            <div class="bg-gray-50 p-4 rounded-lg shadow-sm border">
+                <div class="flex items-center space-x-3 mb-2">
+                    <div class="w-10 h-10 bg-white rounded-md flex items-center justify-center text-gray-400 border">
+                        <i class="fas fa-box"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-900">{{ $product->product_name }}</p>
+                        <p class="text-xs text-gray-500">{{ $product->unit_symbol }}</p>
+                    </div>
+                </div>
+                <div class="text-sm text-gray-600 space-y-1">
+                    <div><span class="font-medium text-gray-800">Jumlah:</span> {{ number_format($product->total_quantity, 0, ',', '.') }} {{ $product->unit_symbol }}</div>
+                    <div><span class="font-medium text-gray-800">Pendapatan:</span> Rp {{ number_format($product->total_revenue, 0, ',', '.') }}</div>
+                    <div><span class="font-medium text-gray-800">Transaksi:</span> {{ $product->transaction_count }}</div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+        @else
+        <div class="text-center py-12 text-gray-500">
+            <i class="fas fa-inbox text-4xl mb-3"></i>
+            <p class="text-lg font-medium">Tidak ada data produk</p>
+            <p class="text-sm">Belum ada transaksi produk terlaris pada periode ini</p>
         </div>
         @endif
     </div>
+</div>
+
+
+
+
 </div>
 
 <!-- Transaction Detail Modal -->

@@ -123,9 +123,15 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <a href="{{ route('stock.product', $product) }}" class="text-indigo-600 hover:text-indigo-900">
-                                Detail
-                            </a>
+                            <div class="flex space-x-2">
+                                <a href="{{ route('stock.product', $product) }}" class="text-indigo-600 hover:text-indigo-900">
+                                    Detail
+                                </a>
+                                <span class="text-gray-300">|</span>
+                                <a href="{{ route('stock.edit', $product) }}" class="text-green-600 hover:text-green-900">
+                                    Edit
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     @endforeach

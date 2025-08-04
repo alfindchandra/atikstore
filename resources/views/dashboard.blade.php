@@ -180,7 +180,7 @@
             <div class="card-header">
                 <div class="flex justify-between items-center">
                     <h3 class="text-lg font-semibold text-gray-900">Transaksi Terakhir</h3>
-                    <a href="{{ route('pos.index') }}" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                    <a href="{{ route('reports.sales') }}" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
                         Lihat Semua
                     </a>
                 </div>

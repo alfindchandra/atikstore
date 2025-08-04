@@ -39,6 +39,9 @@ Route::prefix('stock')->name('stock.')->group(function () {
     Route::post('/adjustment', [StockController::class, 'processAdjustment'])->name('process-adjustment');
     Route::get('/movement', [StockController::class, 'movement'])->name('movement');
     Route::get('/product/{product}', [StockController::class, 'productStock'])->name('product');
+    Route::get('/{product}/edit', [StockController::class, 'edit'])->name('edit');
+    Route::put('/{product}', [StockController::class, 'update'])->name('update');
+
 });
 
 // Cash Flow Routes

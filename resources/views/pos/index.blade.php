@@ -1,50 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Point of Sale</title>
+    <title>Point of Sale - Enhanced</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
         body {
-            font-family: "Inter", sans-serif;
+            font-family: 'Inter', sans-serif;
         }
-        .custom-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .custom-modal-content {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-        }
-        .custom-modal-button {
-            background-color: #3b82f6;
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            margin-top: 1rem;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .custom-modal-button:hover {
-            background-color: #2563eb;
-        }
+        
+        /* Loading Animation */
         .loading-spinner {
             display: inline-block;
             width: 20px;
@@ -54,160 +25,297 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
+        
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        /* Slide animations */
+        .slide-in-right {
+            animation: slideInRight 0.3s ease-out;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Pulse animation for buttons */
+        .pulse-success {
+            animation: pulseSuccess 0.6s ease-in-out;
+        }
+        
+        @keyframes pulseSuccess {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        /* Modal styles */
+        .modal-backdrop {
+            backdrop-filter: blur(4px);
+        }
+        
+        /* Quick pay button hover effects */
+        .quick-pay-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .quick-pay-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Digital clock */
+        .digital-clock {
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0.1em;
+        }
+        
+        /* Cart item animations */
+        .cart-item {
+            transition: all 0.3s ease;
+        }
+        
+        .cart-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
-<body class="min-h-screen bg-gray-50 p-4">
-
-    <div class="max-w-7xl mx-auto">
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div class="max-w-7xl mx-auto p-4 ">
         <!-- Header -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Point of Sale</h1>
-                    <p class="text-gray-600">Kasir Toko Kelontong</p>
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6 border border-blue-100 hidden lg:block">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-3 rounded-lg">
+                        <i class="fas fa-cash-register text-white text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl lg:text-3xl font-bold text-gray-900">Point of Sale</h1>
+                        <p class="text-gray-600">Sistem Kasir Modern</p>
+                    </div>
                 </div>
                 <div class="text-right">
-                    <p class="text-sm text-gray-500">Tanggal</p>
-                    <p class="text-lg font-semibold" id="current-date"></p>
+                    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-lg">
+                        <p class="text-sm opacity-90">Jakarta, Indonesia</p>
+                        <p class="text-lg font-bold digital-clock" id="current-time"></p>
+                        <p class="text-sm opacity-90" id="current-date"></p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Product Search & Cart -->
-            <div class="lg:col-span-2 space-y-6">
-                <!-- Search Product -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-lg font-semibold mb-4">Cari Produk</h2>
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <!-- Left Panel - Product Search & Cart -->
+            <div class="xl:col-span-2 space-y-6">
+                <!-- Product Search -->
+                <div class="bg-white rounded-xl shadow-lg p-6 border border-blue-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+                            <i class="fas fa-search text-blue-600 mr-2"></i>
+                            Cari Produk
+                        </h2>
+                        <button id="add-product-btn" class="bg-green-600 hover:bg-green-700 text-white px-2 lg:px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-plus mr-2"></i>
+                            Tambah Produk
+                        </button>
+                    </div>
+                    
                     <div class="relative">
                         <input
                             type="text"
                             id="search-input"
                             placeholder="Scan barcode atau ketik nama produk..."
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
                             autofocus
                         />
-                        <div class="absolute right-3 top-3">
+                        <div class="absolute left-4 top-3.5">
                             <i id="search-icon" class="fas fa-search text-gray-400"></i>
+                        </div>
+                        <div class="absolute right-3 top-2">
+                            <span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">F1</span>
                         </div>
                     </div>
 
                     <!-- Search Results -->
-                    <div id="search-results" class="mt-4 border border-gray-200 rounded-lg max-h-60 overflow-y-auto hidden">
+                    <div id="search-results" class="mt-4 border border-gray-200 rounded-lg max-h-80 overflow-y-auto custom-scrollbar hidden">
                         <!-- Search results will be dynamically inserted here -->
                     </div>
                 </div>
 
                 <!-- Shopping Cart -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-lg font-semibold">Keranjang Belanja</h2>
+                <div class="bg-white rounded-xl shadow-lg p-6 border border-blue-100">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+                            <i class="fas fa-shopping-cart text-blue-600 mr-2"></i>
+                            Keranjang Belanja
+                            <span id="cart-count" class="ml-2 bg-blue-600 text-white text-sm px-2 py-1 rounded-full hidden">0</span>
+                        </h2>
                         <button
                             id="clear-cart-button"
-                            class="text-red-600 hover:text-red-700 text-sm hidden"
+                            class="text-red-600 hover:text-red-700 px-3 py-2 rounded-lg hover:bg-red-50 transition-colors hidden"
                         >
                             <i class="fas fa-trash mr-1"></i>
                             Kosongkan
                         </button>
                     </div>
 
-                    <div id="cart-empty-message" class="text-center py-8">
-                        <i class="fas fa-shopping-cart text-gray-400 text-4xl mb-3"></i>
-                        <p class="text-gray-500">Keranjang masih kosong</p>
+                    <div id="cart-empty-message" class="text-center py-12">
+                        <div class="bg-gray-50 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-shopping-cart text-gray-400 text-3xl"></i>
+                        </div>
+                        <p class="text-gray-500 text-lg">Keranjang masih kosong</p>
+                        <p class="text-gray-400 text-sm mt-1">Scan atau cari produk untuk memulai</p>
                     </div>
 
-                    <div id="cart-items" class="space-y-3">
+                    <div id="cart-items" class="space-y-4">
                         <!-- Cart items will be dynamically inserted here -->
                     </div>
                 </div>
             </div>
 
-            <!-- Payment Panel -->
+            <!-- Right Panel - Payment & Summary -->
             <div class="space-y-6">
                 <!-- Total Summary -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-lg font-semibold mb-4">Ringkasan</h2>
-                    <div class="space-y-3">
-                        <div class="flex justify-between">
+                <div class="bg-white rounded-xl shadow-lg p-6 border border-blue-100">
+                    <h2 class="text-xl font-semibold mb-6 text-gray-900 flex items-center">
+                        <i class="fas fa-calculator text-blue-600 mr-2"></i>
+                        Ringkasan
+                    </h2>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                             <span class="text-gray-600">Subtotal:</span>
-                            <span id="subtotal-display" class="font-medium">Rp0</span>
+                            <span id="subtotal-display" class="font-bold text-lg">Rp0</span>
                         </div>
-                        <div class="border-t pt-3">
-                            <div class="flex justify-between text-lg font-bold">
-                                <span>Total:</span>
-                                <span id="total-display" class="text-blue-600">Rp0</span>
-                            </div>
+                        <div class="flex justify-between items-center p-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg">
+                            <span class="text-lg">Total:</span>
+                            <span id="total-display" class="font-bold text-2xl">Rp0</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Payment -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-lg font-semibold mb-4">Pembayaran</h2>
+                <div class="bg-white rounded-xl shadow-lg p-6 border border-blue-100">
+                    <h2 class="text-xl font-semibold mb-6 text-gray-900 flex items-center">
+                        <i class="fas fa-credit-card text-blue-600 mr-2"></i>
+                        Pembayaran
+                    </h2>
+                    
                     <div class="space-y-4">
                         <div>
                             <label for="paid-amount-input" class="block text-sm font-medium text-gray-700 mb-2">
                                 Jumlah Dibayar
                             </label>
-                            <input
-                                type="number"
-                                id="paid-amount-input"
-                                placeholder="0"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
-                            />
-                        </div>
-
-                        <div id="change-display-container" class="p-3 bg-gray-50 rounded-lg hidden">
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Kembalian:</span>
-                                <span id="change-display" class="font-bold text-lg">Rp0</span>
+                            <div class="relative">
+                                <input
+                                    type="number"
+                                    id="paid-amount-input"
+                                    placeholder="0"
+                                    class="w-full px-4 py-3 pr-16 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg font-semibold"
+                                />
+                                <div class="absolute right-3 top-2">
+                                    <span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">F2</span>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Quick Amount Buttons -->
                         <div class="grid grid-cols-2 gap-2">
-                            <button class="quick-amount-button px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm font-medium" data-amount="50000">Rp50.000</button>
-                            <button class="quick-amount-button px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm font-medium" data-amount="100000">Rp100.000</button>
-                            <button class="quick-amount-button px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm font-medium" data-amount="200000">Rp200.000</button>
-                            <button class="quick-amount-button px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm font-medium" data-amount="500000">Rp500.000</button>
+                            <button class="quick-pay-btn quick-amount-button px-3 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg font-medium text-sm transition-all" data-amount="10000">
+                                Rp10.000
+                            </button>
+                            <button class="quick-pay-btn quick-amount-button px-3 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg font-medium text-sm transition-all" data-amount="20000">
+                                Rp20.000
+                            </button>
+                            <button class="quick-pay-btn quick-amount-button px-3 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-medium text-sm transition-all" data-amount="50000">
+                                Rp50.000
+                            </button>
+                            <button class="quick-pay-btn quick-amount-button px-3 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-medium text-sm transition-all" data-amount="100000">
+                                Rp100.000
+                            </button>
+                            
+                        </div>
+
+                        <!-- Exact Amount Button -->
+                        <button id="exact-amount-btn" class="w-full py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg font-medium transition-all quick-pay-btn">
+                            <i class="fas fa-equals mr-2"></i>
+                            Uang Pas
+                        </button>
+
+                        <div id="change-display-container" class="p-4 bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-lg hidden">
+                            <div class="flex justify-between items-center">
+                                <span class="text-green-800 font-medium">Kembalian:</span>
+                                <span id="change-display" class="font-bold text-xl text-green-800">Rp0</span>
+                            </div>
                         </div>
 
                         <button
                             id="process-transaction-button"
-                            class="w-full py-4 rounded-lg font-semibold text-lg bg-gray-300 text-gray-500 cursor-not-allowed"
+                            class="w-full py-4 rounded-lg font-semibold text-lg bg-gray-300 text-gray-500 cursor-not-allowed transition-all duration-300"
                             disabled
                         >
                             <i class="fas fa-cash-register mr-2"></i>
                             Proses Transaksi
                         </button>
+                        
+                        <div class="text-center text-xs text-gray-500">
+                            Tekan F3 untuk proses transaksi
+                        </div>
                     </div>
                 </div>
 
                 <!-- Quick Actions -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h3 class="text-lg font-semibold mb-4">Aksi Cepat</h3>
-                    <div class="space-y-2">
+                <div class="bg-white rounded-xl shadow-lg p-6 border border-blue-100">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-900 flex items-center">
+                        <i class="fas fa-bolt text-blue-600 mr-2"></i>
+                        Aksi Cepat
+                    </h3>
+                    <div class="grid grid-cols-1 gap-3">
                         <button
                             id="focus-search-button"
-                            class="w-full px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg font-medium"
+                            class="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg font-medium transition-all quick-pay-btn"
                         >
                             <i class="fas fa-search mr-2"></i>
-                            Fokus Pencarian
+                            Fokus Pencarian (F1)
                         </button>
                         <button
                             onclick="window.location.href = '/products'"
-                            class="w-full px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg font-medium"
+                            class="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-medium transition-all quick-pay-btn"
                         >
                             <i class="fas fa-box mr-2"></i>
                             Kelola Produk
                         </button>
                         <button
                             onclick="window.location.href = '/stock'"
-                            class="w-full px-4 py-2 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 rounded-lg font-medium"
+                            class="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white rounded-lg font-medium transition-all quick-pay-btn"
                         >
                             <i class="fas fa-warehouse mr-2"></i>
                             Kelola Stok
@@ -218,11 +326,90 @@
         </div>
     </div>
 
-    <!-- Custom Alert Modal -->
-    <div id="custom-alert-modal" class="custom-modal-overlay hidden">
-        <div class="custom-modal-content">
-            <p id="custom-alert-message" class="text-gray-800 text-lg"></p>
-            <button id="custom-alert-ok-button" class="custom-modal-button">OK</button>
+    <!-- Add Product Modal -->
+    <div id="add-product-modal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-semibold text-gray-900">Tambah Produk Baru</h3>
+                    <button id="close-add-product-modal" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <form id="add-product-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nama Produk</label>
+                        <input type="text" id="new-product-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Barcode (Opsional)</label>
+                        <input type="text" id="new-product-barcode" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Harga</label>
+                        <input type="number" id="new-product-price" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" min="0" step="100" required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Satuan</label>
+                        <input type="text" id="new-product-unit" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="pcs, kg, liter, dll" value="pcs">
+                    </div>
+                    
+                    <div class="flex space-x-3 pt-4">
+                        <button type="button" id="cancel-add-product" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            Batal
+                        </button>
+                        <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-plus mr-2"></i>
+                            Tambah
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Item Modal -->
+    <div id="edit-item-modal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-semibold text-gray-900">Edit Item</h3>
+                    <button id="close-edit-modal" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <form id="edit-item-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nama Produk</label>
+                        <input type="text" id="edit-item-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" readonly>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Harga Satuan</label>
+                        <input type="number" id="edit-item-price" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" min="0" step="100">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+                        <input type="number" id="edit-item-quantity" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" min="0.1" step="0.1">
+                    </div>
+                    
+                    <div class="flex space-x-3 pt-4">
+                        <button type="button" id="cancel-edit" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            Batal
+                        </button>
+                        <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-save mr-2"></i>
+                            Simpan
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -234,6 +421,7 @@
         let isProcessingTransaction = false;
         let searchTimeout;
         let isSearching = false;
+        let editingItemId = null;
 
         // DOM Elements
         const searchInput = document.getElementById("search-input");
@@ -241,6 +429,7 @@
         const searchResultsDiv = document.getElementById("search-results");
         const cartItemsDiv = document.getElementById("cart-items");
         const cartEmptyMessage = document.getElementById("cart-empty-message");
+        const cartCount = document.getElementById("cart-count");
         const clearCartButton = document.getElementById("clear-cart-button");
         const subtotalDisplay = document.getElementById("subtotal-display");
         const totalDisplay = document.getElementById("total-display");
@@ -249,24 +438,38 @@
         const changeDisplay = document.getElementById("change-display");
         const processTransactionButton = document.getElementById("process-transaction-button");
         const focusSearchButton = document.getElementById("focus-search-button");
-        const customAlertModal = document.getElementById("custom-alert-modal");
-        const customAlertMessage = document.getElementById("custom-alert-message");
-        const customAlertOkButton = document.getElementById("custom-alert-ok-button");
-        const currentDateElement = document.getElementById("current-date");
+        const exactAmountBtn = document.getElementById("exact-amount-btn");
+        const addProductBtn = document.getElementById("add-product-btn");
+        const addProductModal = document.getElementById("add-product-modal");
+        const editItemModal = document.getElementById("edit-item-modal");
 
         /**
-         * Initialize date display
+         * Initialize date and time display
          */
-        function initializeDate() {
-            const now = new Date();
-            const options = {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                timeZone: 'Asia/Jakarta'
-            };
-            currentDateElement.textContent = now.toLocaleDateString('id-ID', options);
+        function initializeDateTime() {
+            function updateTime() {
+                const now = new Date();
+                const timeOptions = {
+                    timeZone: 'Asia/Jakarta',
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                };
+                const dateOptions = {
+                    timeZone: 'Asia/Jakarta',
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                };
+                
+                document.getElementById("current-time").textContent = now.toLocaleTimeString('id-ID', timeOptions);
+                document.getElementById("current-date").textContent = now.toLocaleDateString('id-ID', dateOptions);
+            }
+            
+            updateTime();
+            setInterval(updateTime, 1000);
         }
 
         /**
@@ -290,21 +493,6 @@
         function hideSearchLoading() {
             isSearching = false;
             searchIcon.className = "fas fa-search text-gray-400";
-        }
-
-        /**
-         * Displays a custom alert modal
-         */
-        function showAlert(message) {
-            customAlertMessage.textContent = message;
-            customAlertModal.classList.remove("hidden");
-        }
-
-        /**
-         * Hides the custom alert modal
-         */
-        function hideAlert() {
-            customAlertModal.classList.add("hidden");
         }
 
         /**
@@ -340,51 +528,58 @@
                 cartEmptyMessage.classList.remove("hidden");
                 cartItemsDiv.innerHTML = "";
                 clearCartButton.classList.add("hidden");
+                cartCount.classList.add("hidden");
             } else {
                 cartEmptyMessage.classList.add("hidden");
                 clearCartButton.classList.remove("hidden");
-                cartItemsDiv.innerHTML = cart.map((item) => `
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div class="flex-1">
-                            <h4 class="font-medium text-gray-900">${escapeHtml(item.name)}</h4>
-                            <p class="text-sm text-gray-500">
-                                ${formatCurrency(item.price)} per ${escapeHtml(item.unit_symbol)}
-                            </p>
+                cartCount.classList.remove("hidden");
+                cartCount.textContent = cart.length;
+                
+                cartItemsDiv.innerHTML = cart.map((item, index) => `
+                    <div class="cart-item bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-gray-900 text-lg">${escapeHtml(item.name)}</h4>
+                                <div class="flex items-center space-x-2 mt-1">
+                                    <span class="text-sm text-blue-600 font-medium">${formatCurrency(item.price)}</span>
+                                    <span class="text-sm text-gray-400">per ${escapeHtml(item.unit_symbol)}</span>
+                                </div>
+                            </div>
+                            <button onclick="editCartItem('${item.id}')" class="text-blue-600 hover:text-blue-700 p-2 hover:bg-blue-50 rounded-lg transition-colors">
+                                <i class="fas fa-edit"></i>
+                            </button>
                         </div>
-                        <div class="flex items-center space-x-3">
-                            <div class="flex items-center space-x-2">
+                        
+                        <div class="flex items-center justify-between mt-4">
+                            <div class="flex items-center space-x-3">
                                 <button
-                                    class="w-8 h-8 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center"
+                                    class="w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors"
                                     onclick="updateQuantity('${item.id}', ${item.quantity - 1})"
                                 >
                                     <i class="fas fa-minus text-xs"></i>
                                 </button>
-                                <input
-                                    type="number"
-                                    value="${item.quantity}"
-                                    onchange="updateQuantity('${item.id}', parseFloat(this.value) || 0)"
-                                    class="w-16 text-center border border-gray-300 rounded px-2 py-1"
-                                    min="0"
-                                    step="0.1"
-                                />
+                                <div class="bg-white border border-gray-300 rounded-lg px-3 py-2 min-w-[80px] text-center">
+                                    <span class="font-semibold text-lg">${item.quantity}</span>
+                                </div>
                                 <button
-                                    class="w-8 h-8 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center"
+                                    class="w-8 h-8 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center transition-colors"
                                     onclick="updateQuantity('${item.id}', ${item.quantity + 1})"
                                 >
                                     <i class="fas fa-plus text-xs"></i>
                                 </button>
                             </div>
-                            <div class="w-20 text-right">
-                                <p class="font-semibold">
+                            
+                            <div class="text-right">
+                                <div class="text-xl font-bold text-gray-900">
                                     ${formatCurrency(item.quantity * item.price)}
-                                </p>
+                                </div>
+                                <button
+                                    class="text-red-600 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors mt-1"
+                                    onclick="removeFromCart('${item.id}')"
+                                >
+                                    <i class="fas fa-trash text-sm"></i>
+                                </button>
                             </div>
-                            <button
-                                class="text-red-600 hover:text-red-700 p-1"
-                                onclick="removeFromCart('${item.id}')"
-                            >
-                                <i class="fas fa-times"></i>
-                            </button>
                         </div>
                     </div>
                 `).join("");
@@ -403,10 +598,21 @@
             subtotalDisplay.textContent = formatCurrency(subtotal);
             totalDisplay.textContent = formatCurrency(total);
 
-            if (paidAmount) {
+            // Update exact amount button
+            if (total > 0) {
+                exactAmountBtn.innerHTML = `<i class="fas fa-equals mr-2"></i>Uang Pas (${formatCurrency(total)})`;
+                exactAmountBtn.disabled = false;
+                exactAmountBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                exactAmountBtn.innerHTML = `<i class="fas fa-equals mr-2"></i>Uang Pas`;
+                exactAmountBtn.disabled = true;
+                exactAmountBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+
+            if (paidAmount && parseFloat(paidAmount) >= total) {
                 changeDisplayContainer.classList.remove("hidden");
                 changeDisplay.textContent = formatCurrency(change);
-                changeDisplay.className = `font-bold text-lg ${change >= 0 ? "text-green-600" : "text-red-600"}`;
+                changeDisplay.className = `font-bold text-xl ${change >= 0 ? "text-green-800" : "text-red-800"}`;
             } else {
                 changeDisplayContainer.classList.add("hidden");
             }
@@ -414,12 +620,12 @@
             // Update process transaction button state
             if (cart.length === 0 || parseFloat(paidAmount || 0) < total || isProcessingTransaction) {
                 processTransactionButton.disabled = true;
-                processTransactionButton.classList.remove("bg-blue-600", "hover:bg-blue-700", "text-white");
+                processTransactionButton.classList.remove("bg-gradient-to-r", "from-blue-600", "to-indigo-600", "hover:from-blue-700", "hover:to-indigo-700", "text-white");
                 processTransactionButton.classList.add("bg-gray-300", "text-gray-500", "cursor-not-allowed");
             } else {
                 processTransactionButton.disabled = false;
                 processTransactionButton.classList.remove("bg-gray-300", "text-gray-500", "cursor-not-allowed");
-                processTransactionButton.classList.add("bg-blue-600", "hover:bg-blue-700", "text-white");
+                processTransactionButton.classList.add("bg-gradient-to-r", "from-blue-600", "to-indigo-600", "hover:from-blue-700", "hover:to-indigo-700", "text-white");
             }
         }
 
@@ -451,7 +657,6 @@
 
                 const data = await response.json();
                 
-                // Handle error response
                 if (data.error) {
                     throw new Error(data.message || 'Terjadi kesalahan saat mencari produk');
                 }
@@ -461,26 +666,32 @@
                 if (filteredResults.length > 0) {
                     searchResultsDiv.classList.remove("hidden");
                     searchResultsDiv.innerHTML = filteredResults.map(product => `
-                        <div class="p-3 border-b border-gray-100 last:border-b-0">
+                        <div class="p-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors">
                             <div class="flex justify-between items-start">
                                 <div class="flex-1">
-                                    <h4 class="font-medium text-gray-900">${escapeHtml(product.name)}</h4>
-                                    <p class="text-sm text-gray-500">${escapeHtml(product.category)}</p>
-                                    ${product.barcode ? `<p class="text-xs text-gray-400">Barcode: ${escapeHtml(product.barcode)}</p>` : ''}
+                                    <h4 class="font-semibold text-gray-900 text-lg">${escapeHtml(product.name)}</h4>
+                                    <p class="text-sm text-blue-600 font-medium">${escapeHtml(product.category)}</p>
+                                    ${product.barcode ? `<p class="text-xs text-gray-500 mt-1">Barcode: ${escapeHtml(product.barcode)}</p>` : ''}
                                     ${product.stock_info && product.stock_info.length > 0 ?
-                                        `<p class="text-xs text-gray-500">Stok: ${product.stock_info.map(s => `${s.quantity} ${escapeHtml(s.unit_symbol)}`).join(', ')}</p>` :
-                                        `<p class="text-xs text-gray-500">Stok: N/A</p>`
+                                        `<p class="text-xs text-gray-600 mt-1">
+                                            <i class="fas fa-box mr-1"></i>
+                                            Stok: ${product.stock_info.map(s => `${s.quantity} ${escapeHtml(s.unit_symbol)}`).join(', ')}
+                                        </p>` :
+                                        `<p class="text-xs text-gray-500 mt-1">
+                                            <i class="fas fa-box mr-1"></i>
+                                            Stok: N/A
+                                        </p>`
                                     }
                                 </div>
                                 <div class="ml-4">
-                                    <div class="space-y-1">
+                                    <div class="space-y-2">
                                         ${product.units.map(unit => `
                                             <button
-                                                class="block w-full text-right bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded text-sm transition-colors"
+                                                class="block w-full text-right bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 rounded-lg transition-all transform hover:scale-105"
                                                 onclick="addToCart(${escapeHtml(JSON.stringify(product))}, '${unit.unit_id}', ${unit.price}, '${escapeHtml(unit.unit_symbol)}')"
                                             >
-                                                <div class="font-medium">${formatCurrency(unit.price)}</div>
-                                                <div class="text-xs text-gray-600">per ${escapeHtml(unit.unit_symbol)}</div>
+                                                <div class="font-bold">${formatCurrency(unit.price)}</div>
+                                                <div class="text-xs opacity-90">per ${escapeHtml(unit.unit_symbol)}</div>
                                             </button>
                                         `).join('')}
                                     </div>
@@ -489,14 +700,32 @@
                         </div>
                     `).join('');
                 } else {
-                    searchResultsDiv.innerHTML = `<div class="p-3 text-center text-gray-500">Tidak ada produk ditemukan untuk "${escapeHtml(query)}"</div>`;
+                    searchResultsDiv.innerHTML = `
+                        <div class="p-4 text-center text-gray-500">
+                            <i class="fas fa-search text-2xl mb-2"></i>
+                            <p>Tidak ada produk ditemukan untuk "${escapeHtml(query)}"</p>
+                        </div>
+                    `;
                     searchResultsDiv.classList.remove("hidden");
                 }
 
             } catch (error) {
                 console.error("Search error:", error);
-                showAlert("Terjadi kesalahan saat mencari produk: " + error.message);
-                searchResultsDiv.innerHTML = `<div class="p-3 text-center text-red-500">Terjadi kesalahan saat mencari produk</div>`;
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: "Terjadi kesalahan saat mencari produk: " + error.message,
+                    toast: true,
+                    position: 'top-end',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+                searchResultsDiv.innerHTML = `
+                    <div class="p-4 text-center text-red-500">
+                        <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+                        <p>Terjadi kesalahan saat mencari produk</p>
+                    </div>
+                `;
                 searchResultsDiv.classList.remove("hidden");
             } finally {
                 hideSearchLoading();
@@ -508,7 +737,6 @@
          */
         function addToCart(product, unitId, unitPrice, unitSymbol) {
             try {
-                // Parse product if it's a string (from onclick)
                 if (typeof product === 'string') {
                     product = JSON.parse(product);
                 }
@@ -521,7 +749,7 @@
                     cart[existingItemIndex].quantity += 1;
                 } else {
                     const newItem = {
-                        id: Date.now() + Math.random(), // Unique ID
+                        id: Date.now() + Math.random(),
                         product_id: product.id,
                         unit_id: unitId,
                         name: product.name,
@@ -532,7 +760,6 @@
                     cart.push(newItem);
                 }
 
-                // Clear search
                 searchQuery = "";
                 searchInput.value = "";
                 searchResultsDiv.innerHTML = "";
@@ -540,7 +767,13 @@
                 searchInput.focus();
                 renderCart();
                 
-                // Show success feedback
+                // Success animation
+                const button = event.target.closest('button');
+                if (button) {
+                    button.classList.add('pulse-success');
+                    setTimeout(() => button.classList.remove('pulse-success'), 600);
+                }
+                
                 Swal.fire({
                     icon: 'success',
                     title: 'Berhasil!',
@@ -553,7 +786,14 @@
 
             } catch (error) {
                 console.error("Error adding to cart:", error);
-                showAlert("Terjadi kesalahan saat menambahkan produk ke keranjang");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: "Terjadi kesalahan saat menambahkan produk ke keranjang",
+                    toast: true,
+                    position: 'top-end',
+                    timer: 3000
+                });
             }
         }
 
@@ -627,11 +867,32 @@
         }
 
         /**
+         * Edit cart item
+         */
+        function editCartItem(itemId) {
+            const item = cart.find(item => item.id == itemId);
+            if (!item) return;
+
+            editingItemId = itemId;
+            document.getElementById('edit-item-name').value = item.name;
+            document.getElementById('edit-item-price').value = item.price;
+            document.getElementById('edit-item-quantity').value = item.quantity;
+            editItemModal.classList.remove('hidden');
+        }
+
+        /**
          * Processes the transaction
          */
         async function processTransaction() {
             if (cart.length === 0) {
-                showAlert("Keranjang masih kosong!");
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Keranjang Kosong!',
+                    text: 'Tambahkan produk ke keranjang terlebih dahulu',
+                    toast: true,
+                    position: 'top-end',
+                    timer: 3000
+                });
                 return;
             }
 
@@ -639,27 +900,47 @@
             const total = subtotal;
             
             if (parseFloat(paidAmount) < total) {
-                showAlert("Jumlah pembayaran kurang!");
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Pembayaran Kurang!',
+                    text: 'Jumlah pembayaran kurang dari total',
+                    toast: true,
+                    position: 'top-end',
+                    timer: 3000
+                });
                 paidAmountInput.focus();
                 return;
             }
 
-            // Show confirmation dialog
             const result = await Swal.fire({
                 title: 'Konfirmasi Transaksi',
                 html: `
-                    <div class="text-left">
-                        <p><strong>Total: ${formatCurrency(total)}</strong></p>
-                        <p>Dibayar: ${formatCurrency(parseFloat(paidAmount))}</p>
-                        <p>Kembalian: ${formatCurrency(parseFloat(paidAmount) - total)}</p>
+                    <div class="text-left bg-gray-50 p-4 rounded-lg">
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span class="font-medium">Total:</span>
+                                <span class="font-bold text-blue-600">${formatCurrency(total)}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Dibayar:</span>
+                                <span>${formatCurrency(parseFloat(paidAmount))}</span>
+                            </div>
+                            <div class="flex justify-between border-t pt-2">
+                                <span>Kembalian:</span>
+                                <span class="font-bold text-green-600">${formatCurrency(parseFloat(paidAmount) - total)}</span>
+                            </div>
+                        </div>
                     </div>
                 `,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#d33',
-                confirmButtonText: 'Proses Transaksi',
-                cancelButtonText: 'Batal'
+                confirmButtonText: '<i class="fas fa-cash-register mr-2"></i>Proses Transaksi',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-xl'
+                }
             });
 
             if (!result.isConfirmed) {
@@ -696,16 +977,33 @@
                         icon: "success",
                         title: "Transaksi Berhasil!",
                         html: `
-                            <div class="text-left">
-                                <p><strong>No. Transaksi: ${data.transaction.transaction_number}</strong></p>
-                                <p>Total: ${formatCurrency(data.transaction.total_amount)}</p>
-                                <p>Dibayar: ${formatCurrency(data.transaction.paid_amount)}</p>
-                                <p>Kembalian: ${formatCurrency(data.transaction.change_amount)}</p>
+                            <div class="text-left bg-green-50 p-4 rounded-lg">
+                                <div class="space-y-2">
+                                    <div class="flex justify-between">
+                                        <span class="font-medium">No. Transaksi:</span>
+                                        <span class="font-bold">${data.transaction.transaction_number}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Total:</span>
+                                        <span>${formatCurrency(data.transaction.total_amount)}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Dibayar:</span>
+                                        <span>${formatCurrency(data.transaction.paid_amount)}</span>
+                                    </div>
+                                    <div class="flex justify-between border-t pt-2">
+                                        <span>Kembalian:</span>
+                                        <span class="font-bold text-green-600">${formatCurrency(data.transaction.change_amount)}</span>
+                                    </div>
+                                </div>
                             </div>
                         `,
                         showCancelButton: true,
-                        confirmButtonText: "Cetak Struk",
-                        cancelButtonText: "OK",
+                        confirmButtonText: '<i class="fas fa-print mr-2"></i>Cetak Struk',
+                        cancelButtonText: 'OK',
+                        customClass: {
+                            popup: 'rounded-xl'
+                        }
                     }).then((result) => {
                         if (result.isConfirmed) {
                             window.open(data.receipt_url + '/print', "_blank");
@@ -713,11 +1011,25 @@
                     });
                     clearCartWithoutConfirm();
                 } else {
-                    showAlert("Error: " + (data.message || "Terjadi kesalahan"));
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Transaksi Gagal!',
+                        text: data.message || "Terjadi kesalahan",
+                        customClass: {
+                            popup: 'rounded-xl'
+                        }
+                    });
                 }
             } catch (error) {
                 console.error("Transaction error:", error);
-                showAlert("Terjadi kesalahan saat memproses transaksi: " + error.message);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: "Terjadi kesalahan saat memproses transaksi: " + error.message,
+                    customClass: {
+                        popup: 'rounded-xl'
+                    }
+                });
             } finally {
                 isProcessingTransaction = false;
                 processTransactionButton.innerHTML = `<i class="fas fa-cash-register mr-2"></i> Proses Transaksi`;
@@ -726,7 +1038,7 @@
         }
 
         /**
-         * Clears cart without confirmation (used after successful transaction)
+         * Clears cart without confirmation
          */
         function clearCartWithoutConfirm() {
             cart = [];
@@ -737,7 +1049,7 @@
         }
 
         /**
-         * Handle barcode scanning or exact product search
+         * Handle barcode scanning
          */
         async function handleBarcodeSearch(barcode) {
             try {
@@ -754,29 +1066,84 @@
 
                 if (data.success && data.product) {
                     const product = data.product;
-                    // Auto-add the first unit to cart
                     if (product.units && product.units.length > 0) {
                         const firstUnit = product.units[0];
                         addToCart(product, firstUnit.unit_id, firstUnit.price, firstUnit.unit_symbol);
                     }
                 } else {
-                    // If not found by barcode, do regular search
                     handleSearch(barcode);
                 }
             } catch (error) {
                 console.error("Barcode search error:", error);
-                // Fallback to regular search
                 handleSearch(barcode);
             }
         }
 
+        /**
+         * Add new product (simplified version for POS)
+         */
+        async function addNewProduct() {
+            const name = document.getElementById('new-product-name').value.trim();
+            const barcode = document.getElementById('new-product-barcode').value.trim();
+            const price = parseFloat(document.getElementById('new-product-price').value);
+            const unit = document.getElementById('new-product-unit').value.trim() || 'pcs';
+
+            if (!name || !price || price <= 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Data Tidak Lengkap!',
+                    text: 'Mohon isi nama produk dan harga dengan benar',
+                    toast: true,
+                    position: 'top-end',
+                    timer: 3000
+                });
+                return;
+            }
+
+            // For demo purposes, we'll add it directly to cart as a temporary product
+            const tempProduct = {
+                id: 'temp_' + Date.now(),
+                name: name,
+                barcode: barcode,
+                category: 'Produk Baru'
+            };
+
+            const newItem = {
+                id: Date.now() + Math.random(),
+                product_id: tempProduct.id,
+                unit_id: 'temp_unit',
+                name: tempProduct.name,
+                unit_symbol: unit,
+                price: price,
+                quantity: 1,
+            };
+
+            cart.push(newItem);
+            renderCart();
+            
+            // Clear form and close modal
+            document.getElementById('add-product-form').reset();
+            document.getElementById('new-product-unit').value = 'pcs';
+            addProductModal.classList.add('hidden');
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Produk Ditambahkan!',
+                text: `${name} berhasil ditambahkan ke keranjang`,
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        }
+
         // Event Listeners
         document.addEventListener("DOMContentLoaded", () => {
-            initializeDate();
+            initializeDateTime();
             renderCart();
             updateTotals();
 
-            // Search input handling with debounce
+            // Search input handling
             searchInput.addEventListener("input", (e) => {
                 searchQuery = e.target.value;
                 clearTimeout(searchTimeout);
@@ -788,7 +1155,6 @@
                 }
                 
                 searchTimeout = setTimeout(() => {
-                    // Check if it looks like a barcode (numbers, length > 8)
                     if (/^\d{8,}$/.test(searchQuery)) {
                         handleBarcodeSearch(searchQuery);
                     } else {
@@ -797,11 +1163,9 @@
                 }, 300);
             });
 
-            // Handle Enter key press on search input
             searchInput.addEventListener("keypress", (e) => {
                 if (e.key === "Enter" && searchQuery) {
                     e.preventDefault();
-                    // Clear timeout and search immediately
                     clearTimeout(searchTimeout);
                     if (/^\d{8,}$/.test(searchQuery)) {
                         handleBarcodeSearch(searchQuery);
@@ -817,7 +1181,6 @@
                 updateTotals();
             });
 
-            // Handle Enter key on paid amount input
             paidAmountInput.addEventListener("keypress", (e) => {
                 if (e.key === "Enter" && !processTransactionButton.disabled) {
                     processTransaction();
@@ -830,22 +1193,95 @@
                     paidAmount = e.target.dataset.amount;
                     paidAmountInput.value = paidAmount;
                     updateTotals();
+                    e.target.classList.add('pulse-success');
+                    setTimeout(() => e.target.classList.remove('pulse-success'), 600);
                 });
             });
 
-            // Process transaction button click
+            // Exact amount button
+            exactAmountBtn.addEventListener("click", () => {
+                const total = cart.reduce((sum, item) => sum + item.quantity * item.price, 0);
+                if (total > 0) {
+                    paidAmount = total.toString();
+                    paidAmountInput.value = paidAmount;
+                    updateTotals();
+                    exactAmountBtn.classList.add('pulse-success');
+                    setTimeout(() => exactAmountBtn.classList.remove('pulse-success'), 600);
+                }
+            });
+
+            // Button event listeners
             processTransactionButton.addEventListener("click", processTransaction);
-
-            // Clear cart button click
             clearCartButton.addEventListener("click", clearCart);
-
-            // Focus search button click
             focusSearchButton.addEventListener("click", () => {
                 searchInput.focus();
             });
 
-            // Custom alert OK button
-            customAlertOkButton.addEventListener("click", hideAlert);
+            // Modal event listeners
+            addProductBtn.addEventListener("click", () => {
+                addProductModal.classList.remove('hidden');
+                document.getElementById('new-product-name').focus();
+            });
+
+            document.getElementById('close-add-product-modal').addEventListener("click", () => {
+                addProductModal.classList.add('hidden');
+            });
+
+            document.getElementById('cancel-add-product').addEventListener("click", () => {
+                addProductModal.classList.add('hidden');
+            });
+
+            document.getElementById('add-product-form').addEventListener("submit", (e) => {
+                e.preventDefault();
+                addNewProduct();
+            });
+
+            document.getElementById('close-edit-modal').addEventListener("click", () => {
+                editItemModal.classList.add('hidden');
+            });
+
+            document.getElementById('cancel-edit').addEventListener("click", () => {
+                editItemModal.classList.add('hidden');
+            });
+
+            document.getElementById('edit-item-form').addEventListener("submit", (e) => {
+                e.preventDefault();
+                const newPrice = parseFloat(document.getElementById('edit-item-price').value);
+                const newQuantity = parseFloat(document.getElementById('edit-item-quantity').value);
+                
+                if (newPrice > 0 && newQuantity > 0) {
+                    cart = cart.map(item => {
+                        if (item.id == editingItemId) {
+                            return { ...item, price: newPrice, quantity: newQuantity };
+                        }
+                        return item;
+                    });
+                    renderCart();
+                    editItemModal.classList.add('hidden');
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Item Diperbarui!',
+                        timer: 1500,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                }
+            });
+
+            // Close modals when clicking outside
+            addProductModal.addEventListener("click", (e) => {
+                if (e.target === addProductModal) {
+                    addProductModal.classList.add('hidden');
+                }
+            });
+
+            editItemModal.addEventListener("click", (e) => {
+                if (e.target === editItemModal) {
+                    editItemModal.classList.add('hidden');
+                }
+            });
 
             // Close search results when clicking outside
             document.addEventListener("click", (e) => {
@@ -856,12 +1292,6 @@
 
             // Keyboard shortcuts
             document.addEventListener("keydown", (e) => {
-                // Ctrl/Cmd + F for focus search
-                if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
-                    e.preventDefault();
-                    searchInput.focus();
-                }
-                
                 // F1 for focus search
                 if (e.key === 'F1') {
                     e.preventDefault();
@@ -874,10 +1304,17 @@
                     paidAmountInput.focus();
                 }
                 
-                // F3 for process transaction (if enabled)
+                // F3 for process transaction
                 if (e.key === 'F3' && !processTransactionButton.disabled) {
                     e.preventDefault();
                     processTransaction();
+                }
+                
+                // Escape to close modals
+                if (e.key === 'Escape') {
+                    addProductModal.classList.add('hidden');
+                    editItemModal.classList.add('hidden');
+                    searchResultsDiv.classList.add('hidden');
                 }
             });
         });
