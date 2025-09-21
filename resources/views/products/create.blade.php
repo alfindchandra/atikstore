@@ -1,93 +1,76 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-4xl mx-auto">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <!-- Page Header -->
-    <div class="mb-6">
-        <div class="flex items-center mb-2">
-            <a href="{{ route('products.index') }}" class="text-gray-600 hover:text-gray-800 mr-3">
-                <i class="fas fa-arrow-left"></i>
+    <div class="px-6 py-4 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+            <h2 class="text-xl font-semibold text-gray-900">Tambah Produk</h2>
+            <a href="{{ route('products.index') }}" class="text-gray-600 hover:text-gray-900">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
             </a>
-            <h1 class="text-2xl font-bold text-gray-900">Tambah Produk</h1>
         </div>
-        <p class="text-gray-600">Buat produk baru dengan informasi lengkap</p>
     </div>
 
-    <form action="{{ route('products.store') }}" method="POST" id="productForm">
+    <form action="{{ route('products.store') }}" method="POST" id="productForm" class="space-y-8">
         @csrf
-        
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Main Form -->
             <div class="lg:col-span-2 space-y-6">
-                <!-- Basic Information -->
-                <div class="card">
-                    <div class="card-header">
+                <!-- Informasi Dasar -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                    <div class="px-5 py-4 border-b border-gray-100 flex items-center">
+                        <i class="fas fa-info-circle text-blue-500 mr-2"></i>
                         <h3 class="text-lg font-semibold text-gray-900">Informasi Dasar</h3>
                     </div>
-                    <div class="card-body space-y-4">
-                        <!-- Product Name -->
+                    <div class="p-5 space-y-5">
+                        <!-- Nama Produk -->
                         <div>
-                            <label for="name" class="form-label">
-                                <i class="fas fa-box text-gray-400 mr-2"></i>
-                                Nama Produk <span class="text-red-500">*</span>
+                            <label for="name" class="block text-sm font-medium text-gray-700">
+                                <i class="fas fa-box mr-1 text-gray-400"></i> Nama Produk <span class="text-red-500">*</span>
                             </label>
-                            <input 
-                                type="text" 
-                                id="name" 
-                                name="name" 
-                                value="{{ old('name') }}"
-                                class="form-input @error('name') border-red-500 @enderror" 
-                                placeholder="Contoh: Indomie Goreng"
-                                required
-                                autofocus
-                            >
+                            <input type="text" id="name" name="name" 
+                                   value="{{ old('name') }}"
+                                   class="mt-2 block w-full py-2 px-2 rounded-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 transition @error('name') border-red-500 @enderror" 
+                                   placeholder="Contoh: Indomie Goreng" required autofocus>
                             @error('name')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                             @enderror
                         </div>
 
                         <!-- Barcode -->
                         <div>
-                            <label for="barcode" class="form-label">
-                                <i class="fas fa-barcode text-gray-400 mr-2"></i>
-                                Barcode
+                            <label for="barcode" class="block text-sm font-medium text-gray-700">
+                                <i class="fas fa-barcode mr-1 text-gray-400"></i> Barcode
                             </label>
-                            <div class="flex">
-                                <input 
-                                    type="text" 
-                                    id="barcode" 
-                                    name="barcode" 
-                                    value="{{ old('barcode') }}"
-                                    class="form-input rounded-r-none @error('barcode') border-red-500 @enderror" 
-                                    placeholder="Scan atau ketik barcode"
-                                >
-                                <button 
-                                    type="button" 
-                                    class="px-3 py-2 bg-gray-100 border border-l-0 border-gray-300 rounded-r-md hover:bg-gray-200"
-                                    onclick="generateBarcode()"
-                                    title="Generate Barcode"
-                                >
-                                    <i class="fas fa-random text-gray-600"></i>
+                            <div class="mt-2 flex rounded-lg shadow-sm">
+                                <input type="text" id="barcode" name="barcode" value="{{ old('barcode') }}"
+                                       class="flex-1 py-2 px-2 rounded-l-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 transition @error('barcode') border-red-500 @enderror" 
+                                       placeholder="Scan atau ketik barcode">
+                                <button type="button" 
+                                        onclick="generateBarcode()"
+                                        class="px-4 bg-gray-50 border border-l-0 border-gray-300 rounded-r-lg hover:bg-gray-100 transition"
+                                        title="Generate Barcode">
+                                    <i class="fas fa-random text-gray-500"></i>
                                 </button>
                             </div>
                             @error('barcode')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                             @enderror
                         </div>
 
-                        <!-- Category -->
+                        <!-- Kategori -->
                         <div>
-                            <label for="category_id" class="form-label">
-                                <i class="fas fa-tags text-gray-400 mr-2"></i>
-                                Kategori <span class="text-red-500">*</span>
+                            <label for="category_id" class="block text-sm font-medium text-gray-700">
+                                <i class="fas fa-tags mr-1 text-gray-400"></i> Kategori <span class="text-red-500">*</span>
                             </label>
-                            <div class="flex">
-                                <select 
-                                    id="category_id" 
-                                    name="category_id" 
-                                    class="form-input rounded-r-none @error('category_id') border-red-500 @enderror"
-                                    required
-                                >
+                             <div class="flex rounded-lg shadow-sm">
+                                <select id="category_id" name="category_id"
+                                    class="block w-full rounded-l-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 @error('category_id') border-red-500 @enderror"
+                                    required>
                                     <option value="">Pilih Kategori</option>
                                     @foreach($categories as $category)
                                     <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
@@ -95,91 +78,57 @@
                                     </option>
                                     @endforeach
                                 </select>
-                                <a 
-                                    href="{{ route('categories.create') }}" 
-                                    class="px-3 py-2 bg-blue-100 border border-l-0 border-gray-300 rounded-r-md hover:bg-blue-200 text-blue-600"
-                                    title="Tambah Kategori Baru"
-                                    target="_blank"
-                                >
-                                    <i class="fas fa-plus"></i>
+                                <a href="{{ route('categories.create') }}" target="_blank"
+                                    class="flex-shrink-0 inline-flex items-center px-4 py-2 border border-l-0 border-gray-300 rounded-r-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors"
+                                    title="Tambah Kategori Baru">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
                                 </a>
                             </div>
                             @error('category_id')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                             @enderror
                         </div>
 
-                        <!-- Description -->
+                        <!-- Deskripsi -->
                         <div>
-                            <label for="description" class="form-label">
-                                <i class="fas fa-align-left text-gray-400 mr-2"></i>
-                                Deskripsi
+                            <label for="description" class="block text-sm font-medium text-gray-700">
+                                <i class="fas fa-align-left mr-1 text-gray-400"></i> Deskripsi
                             </label>
-                            <textarea 
-                                id="description" 
-                                name="description" 
-                                rows="3"
-                                class="form-input @error('description') border-red-500 @enderror" 
-                                placeholder="Deskripsi produk (opsional)"
-                            >{{ old('description') }}</textarea>
+                            <textarea id="description" name="description" rows="3"
+                                      class="mt-2 py-2 px-2 block w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 transition @error('description') border-red-500 @enderror"
+                                      placeholder="Deskripsi produk (opsional)">{{ old('description') }}</textarea>
                             @error('description')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                             @enderror
                         </div>
 
-                        <!-- Stock Alert Minimum -->
+                        <!-- Minimum Stok -->
                         <div>
-                            <label for="stock_alert_minimum" class="form-label">
-                                <i class="fas fa-exclamation-triangle text-gray-400 mr-2"></i>
-                                Minimum Stok Alert <span class="text-red-500">*</span>
+                            <label for="stock_alert_minimum" class="block text-sm font-medium text-gray-700">
+                                <i class="fas fa-exclamation-triangle mr-1 text-gray-400"></i> Minimum Stok Alert <span class="text-red-500">*</span>
                             </label>
-                            <input 
-                                type="number" 
-                                id="stock_alert_minimum" 
-                                name="stock_alert_minimum" 
-                                value="{{ old('stock_alert_minimum', '10') }}"
-                                class="form-input @error('stock_alert_minimum') border-red-500 @enderror" 
-                                min="0"
-                                step="0.01"
-                                required
-                            >
-                            @error('stock_alert_minimum')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                            <p class="mt-1 text-sm text-gray-500">
-                                Sistem akan memberi peringatan jika stok di bawah nilai ini
-                            </p>
+                            <input type="number" id="stock_alert_minimum" name="stock_alert_minimum" 
+                                   value="{{ old('stock_alert_minimum', 10) }}"
+                                   class="mt-2 block w-full py-2 px-2 rounded-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 transition @error('stock_alert_minimum') border-red-500 @enderror"
+                                   min="0" step="1" required>
+                            <p class="mt-1 text-xs text-gray-500">Sistem akan memberi peringatan jika stok di bawah nilai ini.</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Units & Pricing -->
-                <div class="card">
-                    <div class="card-header">
-                        <div class="flex justify-between items-center">
-                            <h3 class="text-lg font-semibold text-gray-900">Satuan & Harga</h3>
-                            <button type="button" onclick="addUnit()" class="btn-primary text-sm">
-                                <i class="fas fa-plus mr-1"></i>
-                                Tambah Satuan
-                            </button>
-                        </div>
+                <!-- Satuan & Harga -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                    <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900"><i class="fas fa-coins text-yellow-500 mr-2"></i> Satuan & Harga</h3>
+                        <button type="button" onclick="addUnit()" 
+                                class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition">
+                            <i class="fas fa-plus mr-1"></i> Tambah Satuan
+                        </button>
                     </div>
-                    <div class="card-body">
-                        <div id="unitsContainer">
-                            <!-- Unit items will be added here -->
-                        </div>
-                        @error('units')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                        
-                        {{-- Show specific unit field errors --}}
-                        @if($errors->has('units.*'))
-                            @foreach($errors->get('units.*') as $key => $messages)
-                                @foreach($messages as $message)
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @endforeach
-                            @endforeach
-                        @endif
+                    <div class="p-5" id="unitsContainer">
+                        <!-- Unit items will appear here -->
                     </div>
                 </div>
             </div>
@@ -187,85 +136,54 @@
             <!-- Sidebar -->
             <div class="space-y-6">
                 <!-- Preview -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="text-lg font-semibold text-gray-900">
-                            <i class="fas fa-eye mr-2"></i>
-                            Preview Produk
-                        </h3>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                    <div class="px-5 py-4 border-b border-gray-100">
+                        <h3 class="text-lg font-semibold text-gray-900"><i class="fas fa-eye mr-2"></i> Preview Produk</h3>
                     </div>
-                    <div class="card-body">
-                        <div class="space-y-3">
-                            <div>
-                                <h4 class="font-semibold text-gray-900" id="previewName">Nama Produk</h4>
-                                <p class="text-sm text-gray-500" id="previewBarcode">Barcode akan muncul di sini</p>
-                            </div>
-                            <div>
-                                <span class="badge badge-primary" id="previewCategory">Kategori</span>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-600" id="previewDescription">Deskripsi produk</p>
-                            </div>
-                            <div class="pt-3 border-t">
-                                <div class="text-sm text-gray-600 mb-2">Satuan & Harga:</div>
-                                <div id="previewUnits" class="space-y-1 text-sm">
-                                    <div class="text-gray-500 italic">Belum ada satuan</div>
-                                </div>
+                    <div class="p-5 space-y-3 text-sm">
+                        <h4 class="font-semibold text-gray-900" id="previewName">Nama Produk</h4>
+                        <p class="text-gray-500" id="previewBarcode">Barcode akan muncul di sini</p>
+                        <span class="inline-block bg-blue-100 text-blue-700 text-xs font-medium px-2 py-1 rounded-full" id="previewCategory">Kategori</span>
+                        <p class="text-gray-600" id="previewDescription">Deskripsi produk</p>
+                        <div class="pt-3 border-t border-gray-100">
+                            <p class="text-gray-600 font-medium mb-2">Satuan & Harga:</p>
+                            <div id="previewUnits" class="space-y-1 text-sm">
+                                <p class="text-gray-400 italic">Belum ada satuan</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Quick Tips -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="text-lg font-semibold text-gray-900">
-                            <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
-                            Tips
-                        </h3>
+                <!-- Tips -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                    <div class="px-5 py-4 border-b border-gray-100">
+                        <h3 class="text-lg font-semibold text-gray-900"><i class="fas fa-lightbulb text-yellow-500 mr-2"></i> Tips</h3>
                     </div>
-                    <div class="card-body">
-                        <ul class="space-y-2 text-sm text-gray-600">
-                            <li class="flex items-start">
-                                <i class="fas fa-check text-green-500 mr-2 mt-0.5 text-xs"></i>
-                                Harus ada minimal satu satuan dasar
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fas fa-check text-green-500 mr-2 mt-0.5 text-xs"></i>
-                                Conversion rate menentukan konversi antar satuan
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fas fa-check text-green-500 mr-2 mt-0.5 text-xs"></i>
-                                Barcode harus unik jika diisi
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fas fa-check text-green-500 mr-2 mt-0.5 text-xs"></i>
-                                Satuan dasar memiliki conversion rate = 1
-                            </li>
-                        </ul>
-                    </div>
+                    <ul class="p-5 space-y-2 text-sm text-gray-600">
+                        <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-0.5"></i> Harus ada minimal satu satuan dasar.</li>
+                        <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-0.5"></i> Conversion rate menentukan konversi antar satuan.</li>
+                        <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-0.5"></i> Barcode harus unik jika diisi.</li>
+                        <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-0.5"></i> Satuan dasar memiliki conversion rate = 1.</li>
+                    </ul>
                 </div>
 
-                <!-- Form Actions -->
-                <div class="card">
-                    <div class="card-body">
-                        <div class="flex flex-col space-y-3">
-                            <button type="submit" class="btn-primary w-full" id="submitBtn">
-                                <i class="fas fa-save mr-2"></i>
-                                Simpan Produk
-                            </button>
-                            <a href="{{ route('products.index') }}" class="btn-secondary w-full text-center">
-                                <i class="fas fa-times mr-2"></i>
-                                Batal
-                            </a>
-                        </div>
+                <!-- Action Buttons -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+                    <div class="flex flex-col space-y-3">
+                        <button type="submit" id="submitBtn"
+                                class="w-full inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+                            <i class="fas fa-save mr-2"></i> Simpan Produk
+                        </button>
+                        <a href="{{ route('products.index') }}"
+                           class="w-full inline-flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition">
+                            <i class="fas fa-times mr-2"></i> Batal
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </form>
 </div>
-
 <!-- Unit Template -->
 <template id="unitTemplate">
     <div class="unit-item border border-gray-200 rounded-lg p-4 mb-4">
@@ -519,15 +437,7 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
     });
     
     // Check for duplicate units
-    const selectedUnits = [];
-    unitItems.forEach(item => {
-        const unitId = item.querySelector('.unit-select').value;
-        if (unitId && selectedUnits.includes(unitId)) {
-            isValid = false;
-            errorMessage = 'Tidak boleh ada satuan yang sama';
-        }
-        if (unitId) selectedUnits.push(unitId);
-    });
+    
     
     if (!isValid) {
         e.preventDefault();

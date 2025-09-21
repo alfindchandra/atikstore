@@ -11,6 +11,7 @@ use App\Http\Controllers\CashFlowController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\ActionsController;
+use App\Http\Controllers\CustomerController;
 
 // Dashboard
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
@@ -18,8 +19,6 @@ Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 // POS Routes
 Route::prefix('pos')->name('pos.')->group(function () {
     Route::get('/', [POSController::class, 'index'])->name('index');
-    Route::get('/search', [POSController::class, 'searchProduct'])->name('search');
-    Route::post('/process', [POSController::class, 'processTransaction'])->name('process');
     Route::get('/receipt/{transaction}', [POSController::class, 'receipt'])->name('receipt');
     Route::get('/receipt/{transaction}/print', [POSController::class, 'printReceipt'])->name('print-receipt');
 });
@@ -32,6 +31,22 @@ Route::patch('products/{product}/toggle', [ProductController::class, 'toggle'])-
 Route::resource('categories', CategoryController::class)->except(['show']);
 Route::resource('units', UnitController::class)->except(['show']);
 
+// debt costomers
+Route::prefix('debts')->name('debts.')->group(function () {
+    Route::get('/', [CustomerController::class, 'index'])->name('index');
+    Route::get('/create', [CustomerController::class, 'create'])->name('create');
+    Route::post('/', [CustomerController::class, 'store'])->name('store');
+    Route::get('/{debt}', [CustomerController::class, 'show'])->name('show');
+    Route::get('/{debt}/edit', [CustomerController::class, 'edit'])->name('edit');
+    Route::put('/{debt}', [CustomerController::class, 'update'])->name('update');
+    Route::delete('/{debt}', [CustomerController::class, 'destroy'])->name('destroy');
+    
+    // Payment routes
+    Route::post('/{debt}/payment', [CustomerController::class, 'addPayment'])->name('add-payment');
+    
+    // API routes
+    Route::get('/api/transaction-items', [CustomerController::class, 'getTransactionItems'])->name('transaction-items');
+});
 // Stock Routes
 Route::prefix('stock')->name('stock.')->group(function () {
     Route::get('/', [StockController::class, 'index'])->name('index');

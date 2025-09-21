@@ -3,59 +3,58 @@
 @section('content')
 <div class="space-y-6">
     <!-- Page Header -->
-    <div class="flex justify-between items-center">
+    <div class="space-y-6">
+    <div class="flex flex-col md:flex-row md:justify-between md:items-center space-y-4 md:space-y-0">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">Laporan Penjualan</h1>
-            <p class="text-gray-600">Detail transaksi dan analisis penjualan</p>
+            <h1 class="text-3xl font-bold text-gray-800">Laporan Penjualan</h1>
+            <p class="text-md text-gray-500 mt-1">Detail transaksi dan analisis penjualan</p>
         </div>
-        <div class="flex space-x-3">
-            <a href="{{ route('reports.index') }}" class="btn-secondary">
+        <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-3">
+            <a href="{{ route('reports.index') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left mr-2"></i>Kembali
             </a>
+            
             <div class="relative">
-                <button onclick="toggleExportMenu()" class="btn-primary">
+                <button onclick="toggleExportMenu()" class="btn btn-primary">
                     <i class="fas fa-download mr-2"></i>Export
                     <i class="fas fa-chevron-down ml-2"></i>
                 </button>
-                <div id="exportMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
-                    <div class="py-1">
-                        <a href="{{ route('reports.export.sales', ['format' => 'pdf', 'date_from' => $dateFrom, 'date_to' => $dateTo]) }}" 
-                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                            <i class="fas fa-file-pdf mr-2 text-red-500"></i>Export PDF
-                        </a>
-                        <a href="{{ route('reports.export.sales', ['format' => 'excel', 'date_from' => $dateFrom, 'date_to' => $dateTo]) }}" 
-                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                            <i class="fas fa-file-excel mr-2 text-green-500"></i>Export Excel
-                        </a>
-                    </div>
+                <div id="exportMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-20 overflow-hidden">
+                    <a href="{{ route('reports.export.sales', ['format' => 'pdf', 'date_from' => $dateFrom, 'date_to' => $dateTo]) }}" 
+                       class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200">
+                        <i class="fas fa-file-pdf mr-2 text-red-500"></i>Export PDF
+                    </a>
+                    <a href="{{ route('reports.export.sales', ['format' => 'excel', 'date_from' => $dateFrom, 'date_to' => $dateTo]) }}" 
+                       class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200">
+                        <i class="fas fa-file-excel mr-2 text-green-500"></i>Export Excel
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Filter Section -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="text-lg font-semibold text-gray-900">Filter Periode</h3>
-        </div>
-        <div class="card-body">
-            <form method="GET" action="{{ route('reports.sales') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <label class="form-label">Dari Tanggal</label>
-                    <input type="date" name="date_from" value="{{ $dateFrom }}" class="form-input">
-                </div>
-                <div>
-                    <label class="form-label">Sampai Tanggal</label>
-                    <input type="date" name="date_to" value="{{ $dateTo }}" class="form-input">
-                </div>
-                <div class="flex items-end">
-                    <button type="submit" class="btn-primary w-full">
-                        <i class="fas fa-filter mr-2"></i>Filter
-                    </button>
-                </div>
-            </form>
-        </div>
+    <hr class="border-gray-200">
+
+    <div class="card p-6 shadow-md rounded-xl">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">Filter Periode</h3>
+        <form method="GET" action="{{ route('reports.sales') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="form-label" for="date_from">Dari Tanggal</label>
+                <input type="date" id="date_from" name="date_from" value="{{ $dateFrom }}" class="form-input">
+            </div>
+            <div>
+                <label class="form-label" for="date_to">Sampai Tanggal</label>
+                <input type="date" id="date_to" name="date_to" value="{{ $dateTo }}" class="form-input">
+            </div>
+            <div class="flex items-end">
+                <button type="submit" class="btn btn-primary w-full">
+                    <i class="fas fa-filter mr-2"></i>Filter
+                </button>
+            </div>
+        </form>
     </div>
+</div>
+
 
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -357,7 +356,7 @@ document.addEventListener('click', function(event) {
 });
 
 function viewTransaction(transactionId) {
-    fetch(`/reports/transactions/${transactionId}`)
+    fetch(`reports/transactions/${transactionId}`)
         .then(response => response.text())
         .then(html => {
             document.getElementById('transactionContent').innerHTML = html;
@@ -370,7 +369,7 @@ function viewTransaction(transactionId) {
 }
 
 function editTransaction(transactionId) {
-    window.location.href = `/reports/transactions/${transactionId}/edit`;
+    window.location.href = `reports/transactions/${transactionId}/edit`;
 }
 
 function closeModal() {
@@ -384,4 +383,28 @@ document.getElementById('transactionModal').addEventListener('click', function(e
     }
 });
 </script>
+
+<style>
+
+
+    /* Styling Dasar untuk Komponen */
+    .btn {
+        @apply inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg font-semibold text-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+    }
+    .btn-primary {
+        @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
+    }
+    .btn-secondary {
+        @apply bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-400;
+    }
+    .card {
+        @apply bg-white rounded-xl shadow-md overflow-hidden;
+    }
+    .form-label {
+        @apply block text-sm font-medium text-gray-700 mb-1;
+    }
+    .form-input {
+        @apply block w-full px-4 py-2 mt-1 text-gray-900 border border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500;
+    }
+</style>
 @endsection
