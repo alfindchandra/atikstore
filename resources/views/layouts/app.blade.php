@@ -40,7 +40,7 @@
                 <div x-data="{ open: false }" class="relative">
                     <button @click="open = !open" @click.away="open = false" 
                             class="nav-link flex items-center justify-between w-full font-semibold focus:outline-none 
-                                {{ request()->routeIs('debts.*', 'stock.*', 'actions.*') ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600' }}">
+                                {{ request()->routeIs('debts.*', 'purchases.*') ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600' }}">
                         <span>
                             <i class="fa-solid fa-file mr-2"></i>Data Center
                         </span>
@@ -58,7 +58,7 @@
                         x-transition:leave-end="opacity-0 scale-95"
                         class="absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-20 origin-top-left">
                         <div class="py-1">
-                            <a href="{{ route('products.index') }}" class="block px-4 py-2 text-sm {{ request()->routeIs('products.*') ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600 hover:bg-gray-200' }} ">
+                            <a href="{{ route('purchases.index') }}" class="block px-4 py-2 text-sm {{ request()->routeIs('purchases.*') ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600 hover:bg-gray-200' }} ">
                                 <i class="fa-solid fa-user mr-2 text-blue-500"></i>Sales
                             </a>
                             
@@ -163,34 +163,65 @@
 
     <!-- Menu Mobile -->
     <div id="mobile-menu" class="hidden md:hidden bg-white shadow-lg px-4 py-4 space-y-4">
-        <a href="{{ route('dashboard') }}" class="block {{ request()->routeIs('dashboard') ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600' }}">
-            <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+    <a href="{{ route('dashboard') }}" class="block {{ request()->routeIs('dashboard') ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600' }}">
+        <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+    </a>
+    <a href="{{ route('pos.index') }}" class="block {{ request()->routeIs('pos.*') ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600' }}">
+        <i class="fas fa-cash-register mr-2"></i>Kasir
+    </a>
+    
+    <!-- Data Center Mobile Menu -->
+    <div class="border-t pt-2">
+        <p class="text-xs text-gray-500 uppercase font-semibold mb-2">Data Center</p>
+        <a href="{{ route('debts.index') }}" class="block pl-4 py-1 {{ request()->routeIs('debts.*') ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600' }}">
+            <i class="fa-solid fa-money-bill mr-2 text-green-500"></i>Hutang
         </a>
-        <a href="{{ route('pos.index') }}" class="block {{ request()->routeIs('pos.*') ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600' }}">
-            <i class="fas fa-cash-register mr-2"></i>Kasir
+    </div>
+    
+    <!-- Data Master Mobile Menu -->
+    <div class="border-t pt-2">
+        <p class="text-xs text-gray-500 uppercase font-semibold mb-2">Data Master</p>
+        <a href="{{ route('products.index') }}" class="block pl-4 py-1 {{ request()->routeIs('products.*') ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600' }}">
+            <i class="fas fa-box mr-2 text-blue-500"></i>Produk
         </a>
-        <a href="{{ route('products.index') }}" class="block {{ request()->routeIs('products.*') ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600' }}">
-            <i class="fas fa-box mr-2"></i>Produk
+        <a href="{{ route('suppliers.index') }}" class="block pl-4 py-1 {{ request()->routeIs('suppliers.*') ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600' }}">
+            <i class="fa-solid fa-truck mr-2 text-orange-500"></i>Supplier
         </a>
-        <a href="{{ route('stock.index') }}" class="block {{ request()->routeIs('stock.*') ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600' }}">
-            <i class="fas fa-warehouse mr-2"></i>Stok
+        <a href="{{ route('purchases.index') }}" class="block pl-4 py-1 {{ request()->routeIs('purchases.*') ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600' }}">
+            <i class="fa-solid fa-shopping-cart mr-2 text-red-500"></i>Pembelian
         </a>
-        <a href="{{ route('reports.index') }}" class="block {{ request()->routeIs('reports.*') ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600' }}">
-            <i class="fas fa-chart-bar mr-2"></i>Laporan
+        <a href="{{ route('stock.index') }}" class="block pl-4 py-1 {{ request()->routeIs('stock.*') ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600' }}">
+            <i class="fas fa-warehouse mr-2 text-green-500"></i>Stok
         </a>
-        <a href="{{ route('actions.index') }}" class="block {{ request()->routeIs('reports.*') ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600' }}">
-            <i class="fas fa-chart-bar mr-2"></i>Actions
+        <a href="{{ route('actions.index') }}" class="block pl-4 py-1 {{ request()->routeIs('actions.*') ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600' }}">
+            <i class="fas fa-chart-pie mr-2 text-purple-500"></i>Action
         </a>
-        <div class="flex items-center justify-between border-t pt-4">
-            <span class="text-gray-600 text-sm">
-                <i class="fas fa-calendar-alt mr-1"></i>
-                <span id="mobile-time"></span>
-            </span>
-            <div class="bg-blue-100 rounded-full p-2">
-                <i class="fas fa-user text-blue-600"></i>
-            </div>
+    </div>
+    
+    <!-- Laporan Mobile Menu -->
+    <div class="border-t pt-2">
+        <p class="text-xs text-gray-500 uppercase font-semibold mb-2">Laporan</p>
+        <a href="{{ route('reports.sales') }}" class="block pl-4 py-1 {{ request()->routeIs('reports.sales*') ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600' }}">
+            <i class="fas fa-shopping-cart mr-2 text-blue-500"></i>Laporan Penjualan
+        </a>
+        <a href="{{ route('cashflow.index') }}" class="block pl-4 py-1 {{ request()->routeIs('cashflow.*') ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600' }}">
+            <i class="fas fa-warehouse mr-2 text-green-500"></i>Laporan Keuangan
+        </a>
+        <a href="{{ route('reports.index') }}" class="block pl-4 py-1 {{ request()->routeIs('reports.index*') ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600' }}">
+            <i class="fas fa-chart-pie mr-2 text-purple-500"></i>Laporan Analisis
+        </a>
+    </div>
+    
+    <div class="flex items-center justify-between border-t pt-4">
+        <span class="text-gray-600 text-sm">
+            <i class="fas fa-calendar-alt mr-1"></i>
+            <span id="mobile-time"></span>
+        </span>
+        <div class="bg-blue-100 rounded-full p-2">
+            <i class="fas fa-user text-blue-600"></i>
         </div>
     </div>
+</div>
 </nav>
 
   <main class="flex-grow max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">

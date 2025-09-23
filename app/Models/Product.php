@@ -78,4 +78,8 @@ class Product extends Model
     {
         return $this->getTotalStockInBaseUnit() <= $this->stock_alert_minimum;
     }
+    public function tieredPrices()
+{
+    return $this->hasManyThrough(TieredPrice::class, ProductUnit::class);
+}
 }

@@ -12,7 +12,6 @@
                         <h1 class="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-800 bg-clip-text text-transparent">
                             Manajemen Keuangan
                         </h1>
-                        <p class="text-gray-600 text-lg">Kelola pemasukan dan pengeluaran toko dengan mudah</p>
                     </div>
                     <a href="{{ route('cashflow.create') }}" 
                        class="group inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 hover:from-blue-700 hover:to-indigo-700">

@@ -12,6 +12,8 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\ActionsController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\PurchaseController;
 
 // Dashboard
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
@@ -46,6 +48,22 @@ Route::prefix('debts')->name('debts.')->group(function () {
     
     // API routes
     Route::get('/api/transaction-items', [CustomerController::class, 'getTransactionItems'])->name('transaction-items');
+});
+
+Route::prefix('suppliers')->name('suppliers.')->group(function () {
+    Route::resource('/', SupplierController::class);
+    Route::post('/{supplier}/toggle', [SupplierController::class, 'toggle'])->name('suppliers.toggle');
+});
+
+// Purchase routes
+Route::prefix('purchases')->name('purchases.')->group(function () {
+    Route::resource('/', PurchaseController::class);
+    Route::get('/{purchase}/edit', [PurchaseController::class, 'edit'])->name('purchases.edit');
+    Route::get('/{purchase}/show', [PurchaseController::class, 'show'])->name('purchases.show');
+    Route::get('/{purchase}/receipt', [PurchaseController::class, 'receipt'])->name('purchases.receipt');
+    Route::get('/{purchase}/download-receipt', [PurchaseController::class, 'downloadReceipt'])->name('purchases.download-receipt');
+    Route::get('/{purchase}/receipt-data', [PurchaseController::class, 'getReceiptData'])->name('purchases.receipt-data');
+
 });
 // Stock Routes
 Route::prefix('stock')->name('stock.')->group(function () {

@@ -164,6 +164,8 @@
                         <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-0.5"></i> Conversion rate menentukan konversi antar satuan.</li>
                         <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-0.5"></i> Barcode harus unik jika diisi.</li>
                         <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-0.5"></i> Satuan dasar memiliki conversion rate = 1.</li>
+                        <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-0.5"></i> Atur batas minimum dan maksimum pembelian.</li>
+                        <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-0.5"></i> Gunakan harga bertingkat untuk quantity discount.</li>
                     </ul>
                 </div>
 
@@ -184,17 +186,19 @@
         </div>
     </form>
 </div>
+
 <!-- Unit Template -->
 <template id="unitTemplate">
     <div class="unit-item border border-gray-200 rounded-lg p-4 mb-4">
-        <div class="flex justify-between items-start mb-3">
+        <div class="flex justify-between items-start mb-4">
             <h4 class="font-medium text-gray-900">Satuan <span class="unit-number"></span></h4>
             <button type="button" onclick="removeUnit(this)" class="text-red-600 hover:text-red-800">
                 <i class="fas fa-trash"></i>
             </button>
         </div>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Informasi Dasar Satuan -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
                 <label class="form-label">Satuan <span class="text-red-500">*</span></label>
                 <select name="units[INDEX][unit_id]" class="form-input unit-select" required>
@@ -206,7 +210,7 @@
             </div>
             
             <div>
-                <label class="form-label">Harga <span class="text-red-500">*</span></label>
+                <label class="form-label">Harga Dasar <span class="text-red-500">*</span></label>
                 <input type="number" name="units[INDEX][price]" class="form-input unit-price" 
                        min="0" step="1" placeholder="0" required>
             </div>
@@ -225,6 +229,90 @@
                     <span class="text-sm text-gray-700">Satuan Dasar</span>
                 </label>
             </div>
+        </div>
+
+        <!-- Batas Pembelian -->
+        <div class="border-t border-gray-100 pt-4 mb-4">
+            <h5 class="font-medium text-gray-800 mb-3">
+                <i class="fas fa-sliders-h text-purple-500 mr-2"></i> Batas Pembelian
+            </h5>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="form-label">Minimal Pembelian</label>
+                    <input type="number" name="units[INDEX][min_purchase]" class="form-input" 
+                           min="0" step="1" placeholder="1" value="1">
+                    <p class="text-xs text-gray-500 mt-1">Jumlah minimal yang bisa dibeli</p>
+                </div>
+                
+                <div>
+                    <label class="form-label">Maksimal Pembelian</label>
+                    <input type="number" name="units[INDEX][max_purchase]" class="form-input" 
+                           min="0" step="1" placeholder="Kosongkan untuk unlimited">
+                    <p class="text-xs text-gray-500 mt-1">Kosongkan untuk unlimited</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Harga Bertingkat -->
+        <div class="border-t border-gray-100 pt-4">
+            <div class="flex items-center justify-between mb-3">
+                <h5 class="font-medium text-gray-800">
+                    <i class="fas fa-layer-group text-orange-500 mr-2"></i> Harga Bertingkat
+                </h5>
+                <label class="flex items-center">
+                    <input type="checkbox" name="units[INDEX][enable_tiered_pricing]" value="1" 
+                           class="tiered-pricing-checkbox mr-2" onchange="toggleTieredPricing(this)">
+                    <span class="text-sm text-gray-700">Aktifkan Harga Bertingkat</span>
+                </label>
+            </div>
+            
+            <div class="tiered-pricing-container" style="display: none;">
+                <div class="space-y-3">
+                    <div class="text-sm text-gray-600 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                        <i class="fas fa-info-circle text-yellow-600 mr-1"></i>
+                        Harga bertingkat memungkinkan Anda memberikan diskon berdasarkan jumlah pembelian.
+                    </div>
+                    
+                    <div class="tiered-prices">
+                        <!-- Tiered price items will be added here -->
+                    </div>
+                    
+                    <button type="button" onclick="addTieredPrice(this)" 
+                            class="inline-flex items-center px-3 py-1.5 text-sm bg-orange-50 text-orange-600 border border-orange-200 rounded-lg hover:bg-orange-100 transition">
+                        <i class="fas fa-plus mr-1"></i> Tambah Tingkat Harga
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- Tiered Price Template -->
+<template id="tieredPriceTemplate">
+    <div class="tiered-price-item bg-gray-50 p-3 rounded-lg border border-gray-200">
+        <div class="flex justify-between items-start mb-2">
+            <span class="text-sm font-medium text-gray-700">Tingkat <span class="tier-number"></span></span>
+            <button type="button" onclick="removeTieredPrice(this)" class="text-red-600 hover:text-red-800 text-sm">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label class="text-xs text-gray-600">Jumlah Minimum</label>
+                <input type="number" name="units[UNIT_INDEX][tiered_prices][TIER_INDEX][min_quantity]" 
+                       class="form-input text-sm" min="1" step="1" required>
+            </div>
+            <div>
+                <label class="text-xs text-gray-600">Harga</label>
+                <input type="number" name="units[UNIT_INDEX][tiered_prices][TIER_INDEX][price]" 
+                       class="form-input text-sm" min="0" step="1" required>
+            </div>
+        </div>
+        
+        <div class="mt-2">
+            <input type="text" name="units[UNIT_INDEX][tiered_prices][TIER_INDEX][description]" 
+                   class="form-input text-sm" placeholder="Deskripsi (opsional)">
         </div>
     </div>
 </template>
@@ -311,6 +399,66 @@ function handleBaseUnitChange(checkbox) {
     updatePreview();
 }
 
+function toggleTieredPricing(checkbox) {
+    const unitItem = checkbox.closest('.unit-item');
+    const container = unitItem.querySelector('.tiered-pricing-container');
+    const tieredPricesDiv = unitItem.querySelector('.tiered-prices');
+    
+    if (checkbox.checked) {
+        container.style.display = 'block';
+        
+        // Add first tiered price if none exists
+        if (tieredPricesDiv.children.length === 0) {
+            addTieredPrice(checkbox);
+        }
+    } else {
+        container.style.display = 'none';
+        // Clear all tiered prices
+        tieredPricesDiv.innerHTML = '';
+    }
+    
+    updatePreview();
+}
+
+function addTieredPrice(button) {
+    const unitItem = button.closest('.unit-item');
+    const tieredPricesDiv = unitItem.querySelector('.tiered-prices');
+    const template = document.getElementById('tieredPriceTemplate');
+    const clone = template.content.cloneNode(true);
+    
+    // Get unit index from the unit item
+    const unitItems = Array.from(document.querySelectorAll('.unit-item'));
+    const currentUnitIndex = unitItems.indexOf(unitItem);
+    const tierIndex = tieredPricesDiv.children.length;
+    
+    // Replace placeholders
+    let html = clone.querySelector('.tiered-price-item').outerHTML;
+    html = html.replace(/UNIT_INDEX/g, currentUnitIndex);
+    html = html.replace(/TIER_INDEX/g, tierIndex);
+    
+    tieredPricesDiv.insertAdjacentHTML('beforeend', html);
+    
+    // Update tier numbers
+    updateTierNumbers(tieredPricesDiv);
+    updatePreview();
+}
+
+function removeTieredPrice(button) {
+    const tieredPriceItem = button.closest('.tiered-price-item');
+    const tieredPricesDiv = tieredPriceItem.closest('.tiered-prices');
+    
+    tieredPriceItem.remove();
+    updateTierNumbers(tieredPricesDiv);
+    updatePreview();
+}
+
+function updateTierNumbers(tieredPricesDiv) {
+    const items = tieredPricesDiv.querySelectorAll('.tiered-price-item');
+    items.forEach((item, index) => {
+        item.querySelector('.tier-number').textContent = index + 1;
+    });
+}
+
 function generateBarcode() {
     const timestamp = Date.now().toString();
     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
@@ -370,21 +518,55 @@ function updatePreview() {
         const unitSelect = item.querySelector('.unit-select');
         const priceInput = item.querySelector('.unit-price');
         const conversionInput = item.querySelector('.unit-conversion');
+        const minPurchaseInput = item.querySelector('input[name*="[min_purchase]"]');
+        const maxPurchaseInput = item.querySelector('input[name*="[max_purchase]"]');
         const isBase = item.querySelector('.unit-base-checkbox').checked;
+        const hasTieredPricing = item.querySelector('.tiered-pricing-checkbox').checked;
         
         const unitText = unitSelect.options[unitSelect.selectedIndex]?.text || 'Pilih Satuan';
         const price = priceInput.value ? `Rp ${parseInt(priceInput.value).toLocaleString('id-ID')}` : 'Rp 0';
         const conversion = conversionInput.value || '1';
+        const minPurchase = minPurchaseInput.value || '1';
+        const maxPurchase = maxPurchaseInput.value || 'Unlimited';
         const baseText = isBase ? ' (Dasar)' : '';
         
-        unitsHtml += `<div class="flex justify-between">
-            <span>${unitText}${baseText}:</span>
-            <span class="font-medium text-green-600">${price}</span>
+        unitsHtml += `<div class="mb-3 p-2 bg-gray-50 rounded">
+            <div class="flex justify-between items-start">
+                <span class="font-medium">${unitText}${baseText}:</span>
+                <span class="font-medium text-green-600">${price}</span>
+            </div>`;
+        
+        // Purchase limits
+        unitsHtml += `<div class="text-xs text-gray-500 mt-1">
+            Min: ${minPurchase}, Max: ${maxPurchase}
         </div>`;
         
+        // Conversion rate for non-base units
         if (!isBase && conversion !== '1') {
-            unitsHtml += `<div class="text-xs text-gray-500 ml-2">1 ${unitText} = ${conversion} satuan dasar</div>`;
+            unitsHtml += `<div class="text-xs text-gray-500">1 ${unitText} = ${conversion} satuan dasar</div>`;
         }
+        
+        // Tiered pricing
+        if (hasTieredPricing) {
+            const tieredPrices = item.querySelectorAll('.tiered-price-item');
+            if (tieredPrices.length > 0) {
+                unitsHtml += `<div class="text-xs text-orange-600 mt-1">
+                    <i class="fas fa-layer-group mr-1"></i>Harga bertingkat (${tieredPrices.length} tingkat)
+                </div>`;
+                
+                tieredPrices.forEach(tierItem => {
+                    const minQty = tierItem.querySelector('input[name*="[min_quantity]"]').value || '0';
+                    const tierPrice = tierItem.querySelector('input[name*="[price]"]').value || '0';
+                    const tierPriceFormatted = parseInt(tierPrice) ? `Rp ${parseInt(tierPrice).toLocaleString('id-ID')}` : 'Rp 0';
+                    
+                    unitsHtml += `<div class="text-xs text-gray-500 ml-2">
+                        ≥ ${minQty} unit: ${tierPriceFormatted}
+                    </div>`;
+                });
+            }
+        }
+        
+        unitsHtml += `</div>`;
     });
     
     previewUnits.innerHTML = unitsHtml;
@@ -423,6 +605,8 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
         const unitSelect = item.querySelector('.unit-select');
         const priceInput = item.querySelector('.unit-price');
         const conversionInput = item.querySelector('.unit-conversion');
+        const minPurchaseInput = item.querySelector('input[name*="[min_purchase]"]');
+        const maxPurchaseInput = item.querySelector('input[name*="[max_purchase]"]');
         
         if (!unitSelect.value) {
             isValid = false;
@@ -434,10 +618,77 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
             isValid = false;
             errorMessage = `Satuan ${index + 1}: Conversion rate harus diisi dan minimal 0.0001`;
         }
+        
+        // Validate purchase limits
+        const minPurchase = parseFloat(minPurchaseInput.value) || 1;
+        const maxPurchase = parseFloat(maxPurchaseInput.value) || null;
+        
+        if (minPurchase < 1) {
+            isValid = false;
+            errorMessage = `Satuan ${index + 1}: Minimal pembelian harus minimal 1`;
+        }
+        
+        if (maxPurchase !== null && maxPurchase < minPurchase) {
+            isValid = false;
+            errorMessage = `Satuan ${index + 1}: Maksimal pembelian harus lebih besar atau sama dengan minimal pembelian`;
+        }
+        
+        // Validate tiered pricing if enabled
+        const hasTieredPricing = item.querySelector('.tiered-pricing-checkbox').checked;
+        if (hasTieredPricing) {
+            const tieredPrices = item.querySelectorAll('.tiered-price-item');
+            const basePrice = parseFloat(priceInput.value) || 0;
+            
+            if (tieredPrices.length === 0) {
+                isValid = false;
+                errorMessage = `Satuan ${index + 1}: Tambahkan minimal satu tingkat harga`;
+            }
+            
+            const quantities = [];
+            tieredPrices.forEach((tierItem, tierIndex) => {
+                const minQty = tierItem.querySelector('input[name*="[min_quantity]"]').value;
+                const tierPrice = tierItem.querySelector('input[name*="[price]"]').value;
+                
+                if (!minQty || !tierPrice) {
+                    isValid = false;
+                    errorMessage = `Satuan ${index + 1} Tingkat ${tierIndex + 1}: Jumlah minimum dan harga harus diisi`;
+                }
+                
+                const minQtyNum = parseFloat(minQty);
+                const tierPriceNum = parseFloat(tierPrice);
+                
+                if (minQtyNum < 1) {
+                    isValid = false;
+                    errorMessage = `Satuan ${index + 1} Tingkat ${tierIndex + 1}: Jumlah minimum harus minimal 1`;
+                }
+                
+                if (tierPriceNum < 0) {
+                    isValid = false;
+                    errorMessage = `Satuan ${index + 1} Tingkat ${tierIndex + 1}: Harga tidak boleh negatif`;
+                }
+                
+                if (quantities.includes(minQtyNum)) {
+                    isValid = false;
+                    errorMessage = `Satuan ${index + 1}: Jumlah minimum tidak boleh sama`;
+                }
+                
+                quantities.push(minQtyNum);
+            });
+        }
     });
     
     // Check for duplicate units
-    
+    const selectedUnits = [];
+    unitItems.forEach((item, index) => {
+        const unitValue = item.querySelector('.unit-select').value;
+        if (unitValue) {
+            if (selectedUnits.includes(unitValue)) {
+                isValid = false;
+                errorMessage = 'Tidak boleh ada satuan yang sama';
+            }
+            selectedUnits.push(unitValue);
+        }
+    });
     
     if (!isValid) {
         e.preventDefault();
@@ -478,10 +729,43 @@ function loadOldValues() {
                 unitItem.querySelector('.unit-price').value = unitData.price || '';
                 unitItem.querySelector('.unit-conversion').value = unitData.conversion_rate || '';
                 
+                // Purchase limits
+                if (unitData.min_purchase) {
+                    unitItem.querySelector('input[name*="[min_purchase]"]').value = unitData.min_purchase;
+                }
+                if (unitData.max_purchase) {
+                    unitItem.querySelector('input[name*="[max_purchase]"]').value = unitData.max_purchase;
+                }
+                
                 const checkbox = unitItem.querySelector('.unit-base-checkbox');
                 if (unitData.is_base_unit) {
                     checkbox.checked = true;
                     handleBaseUnitChange(checkbox);
+                }
+                
+                // Tiered pricing
+                const tieredCheckbox = unitItem.querySelector('.tiered-pricing-checkbox');
+                if (unitData.enable_tiered_pricing) {
+                    tieredCheckbox.checked = true;
+                    toggleTieredPricing(tieredCheckbox);
+                    
+                    if (unitData.tiered_prices) {
+                        const tieredPricesDiv = unitItem.querySelector('.tiered-prices');
+                        tieredPricesDiv.innerHTML = ''; // Clear default
+                        
+                        unitData.tiered_prices.forEach((tierData, tierIndex) => {
+                            addTieredPrice(tieredCheckbox);
+                            
+                            const tierItems = tieredPricesDiv.querySelectorAll('.tiered-price-item');
+                            const currentTier = tierItems[tierIndex];
+                            
+                            if (currentTier) {
+                                currentTier.querySelector('input[name*="[min_quantity]"]').value = tierData.min_quantity || '';
+                                currentTier.querySelector('input[name*="[price]"]').value = tierData.price || '';
+                                currentTier.querySelector('input[name*="[description]"]').value = tierData.description || '';
+                            }
+                        });
+                    }
                 }
             }
         });
@@ -496,5 +780,68 @@ document.addEventListener('barcodeScan', function(e) {
     document.getElementById('barcode').value = barcode;
     updatePreview();
 });
+
+// Add CSS for form styling
+const style = document.createElement('style');
+style.textContent = `
+    .form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.25rem;
+    }
+    
+    .form-input {
+        display: block;
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        transition: all 0.15s ease-in-out;
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .form-input:invalid {
+        border-color: #ef4444;
+    }
+    
+    .tiered-pricing-container {
+        animation: slideDown 0.3s ease-out;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            max-height: 0;
+        }
+        to {
+            opacity: 1;
+            max-height: 500px;
+        }
+    }
+    
+    .tiered-price-item {
+        animation: fadeIn 0.2s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+`;
+document.head.appendChild(style);
 </script>
 @endsection

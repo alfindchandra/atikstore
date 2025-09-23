@@ -2,13 +2,21 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\POSController;
 use App\Http\Controllers\Api\APIPOSController;
 
-Route::prefix('pos')->name('api.pos.')->group(function () {
-    Route::get('/search-product', [APIPOSController::class, 'searchProduct'])->name('search-product');
-    Route::get('/product-by-barcode', [APIPOSController::class, 'getProductByBarcode'])->name('product-by-barcode');
-    Route::post('/process', [APIPOSController::class, 'processTransaction'])->name('process');
-    Route::get('/today-transactions', [APIPOSController::class, 'getTodayTransactions'])->name('today-transactions');
-    Route::get('/stats', [APIPOSController::class, 'getStats'])->name('stats');
+
+
+Route::prefix('pos')->group(function () {
+    // Search products
+    Route::get('/search-product', [POSController::class, 'searchProduct'])->name('api.pos.search-product');
+    
+    // Get product by barcode
+    Route::get('/product-by-barcode', [POSController::class, 'getProductByBarcode'])->name('api.pos.product-by-barcode');
+    
+    // Calculate tiered price
+    Route::post('/calculate-tiered-price', [POSController::class, 'calculateTieredPrice'])->name('api.pos.calculate-tiered-price');
+    
+    // Process transaction
+    Route::post('/process', [POSController::class, 'processTransaction'])->name('api.pos.process');
 });
