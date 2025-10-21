@@ -1069,14 +1069,7 @@ function enhancedPosSystem() {
                 this.saveCartToStorage();
                 
                 // Show appropriate notification
-                if (priceData.data.applied_tier) {
-                    this.showNotification('success', 
-                        `${product.name} ditambahkan ke keranjang dengan harga tier: ${this.formatCurrency(priceData.data.final_price)}`
-                    );
-                } else {
-                    this.showNotification('success', `${product.name} ditambahkan ke keranjang`);
-                }
-            } catch (error) {
+            }catch (error) {
                 console.error('Error adding to cart:', error);
                 this.showNotification('error', 'Terjadi kesalahan saat menambahkan produk ke keranjang');
             }

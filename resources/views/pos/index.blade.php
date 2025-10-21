@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Point of Sale - Enhanced</title>
+    <title>{{ config('app.toko')}}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
+        /* (Gaya CSS tetap sama, tidak ada perubahan) */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
         body {
@@ -173,9 +174,7 @@
     
     <div class="max-w-7xl mx-auto p-4">
         <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <!-- Left Column - Search and Cart -->
             <div class="xl:col-span-2 space-y-6">
-                <!-- Search Section -->
                 <div class="bg-white rounded-xl shadow-lg p-6 border border-blue-100">
                     <div class="relative">
                         <input
@@ -194,8 +193,7 @@
                         </div>
                     </div>
 
-                    <!-- Search Results -->
-                    <div x-show="searchResults.length > 0 || (searchQuery.length >= 2 && !isSearching)" 
+                    <div x-show="searchQuery.length > 0 && searchResults.length > 0"
                          class="mt-4 border border-gray-200 rounded-lg max-h-80 overflow-y-auto custom-scrollbar">
                         <template x-for="product in searchResults" :key="product.id">
                             <div class="search-result-enhanced p-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors">
@@ -205,28 +203,25 @@
                                         <p class="text-xs text-gray-500 mt-1 hidden md:block" x-show="product.barcode" x-text="'Barcode: ' + product.barcode"></p>
                                         <p class="text-xs text-gray-600 mt-1">
                                             <i class="fas fa-box mr-1"></i>
-                                            <span x-text="product.stock_info?.length > 0 ? product.stock_info.map(s => s.quantity + ' ' + s.unit_symbol).join(', ') : 'Stok: N/A'"></span>
+                                            <span x-text="product.stocks?.length > 0 ? product.stocks.map(s => s.quantity + ' ' + s.unit.symbol).join(', ') : 'Stok: N/A'"></span>
                                         </p>
                                     </div>
                                     <div class="ml-4">
                                         <div class="space-y-2">
-                                            <template x-for="unit in product.units" :key="unit.unit_id">
+                                            <template x-for="unit in product.product_units" :key="unit.unit.id">
                                                 <div class="text-right">
                                                     <button
-                                                        @click="addToCart(product, unit.unit_id, unit.price, unit.unit_symbol)"
+                                                        @click="addToCart(product, unit.unit_id, unit.price, unit.unit.symbol)"
                                                         class="block w-full text-right bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 rounded-lg transition-all transform hover:scale-105">
-                                                        <div class="font-bold" x-text="formatCurrency(unit.price)+'/'+unit.unit_symbol"></div>
+                                                        <div class="font-bold" x-text="formatCurrency(unit.price)+'/'+unit.unit.symbol"></div>
                                                         
                                                         <div x-show="unit.enable_tiered_pricing && unit.tiered_prices?.length > 0" 
                                                              class="text-xs opacity-90 mt-1">
-                                                            <i class="fas fa-layer-group mr-1"></i>
-                                                            <span x-text="unit.tiered_prices.length + ' tier harga'"></span>
+                                                             <i class="fas fa-layer-group mr-1"></i>
+                                                             <span x-text="unit.tiered_prices.length + ' tier harga'"></span>
                                                         </div>
                                                         
-                                                        <div class="text-xs opacity-90 mt-1">
-                                                            <span x-text="'Min: ' + (unit.min_purchase || 1)"></span>
-                                                            <span x-show="unit.max_purchase" x-text="' • Max: ' + unit.max_purchase"></span>
-                                                        </div>
+                                                       
                                                     </button>
                                                     
                                                     <div x-show="unit.enable_tiered_pricing && unit.tiered_prices?.length > 0" 
@@ -252,7 +247,7 @@
                                 </div>
                             </div>
                         </template>
-                    
+                        
                         <div x-show="searchQuery.length >= 2 && searchResults.length === 0 && !isSearching" 
                              class="p-4 text-center text-gray-500">
                             <i class="fas fa-search text-2xl mb-2"></i>
@@ -261,7 +256,6 @@
                     </div>
                 </div>
 
-                <!-- Cart Section -->
                 <div class="bg-white rounded-xl shadow-lg p-6 border border-blue-100">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-sm md:text-lg font-semibold text-gray-900 flex items-center">
@@ -288,7 +282,6 @@
                         <p class="text-gray-400 text-sm mt-1">Scan atau cari produk untuk memulai</p>
                     </div>
 
-                    <!-- Cart Items -->
                     <div class="space-y-4" id="enhanced-cart-container">
                         <template x-for="(item, index) in cart" :key="item.id + '-' + index">
                             <div class="cart-item-enhanced p-4 bg-white rounded-xl shadow-sm border border-gray-200 mb-3 transition-all"
@@ -299,7 +292,6 @@
                                         <div class="flex items-center space-x-2">
                                             <h4 class="font-semibold text-gray-900 text-base md:text-lg truncate" x-text="item.name"></h4>
                                             
-                                            <!-- Tier indicator -->
                                             <div x-show="item.applied_tier" 
                                                  class="tier-badge tier-indicator"
                                                  @click="showTieredPricingInfo(item)"
@@ -308,38 +300,27 @@
                                                 <span x-text="'T' + item.applied_tier?.min_quantity"></span>
                                             </div>
                                             
-                                            <!-- Savings indicator -->
                                             <div x-show="(item.discount_amount || 0) > 0" class="savings-badge">
                                                 <i class="fas fa-piggy-bank mr-1"></i>
                                                 <span x-text="formatCurrency(item.discount_amount || 0)"></span>
                                             </div>
                                         </div>
                                         
-                                        <!-- Price and unit info -->
                                         <div class="flex items-center space-x-2 text-sm mt-1">
                                             <div class="flex items-center space-x-1">
                                                 <span class="text-gray-600" x-text="formatCurrency(item.price)"></span>
                                                 <span class="text-xs text-gray-500" x-text="'/ ' + item.unit_symbol"></span>
                                             </div>
                                             
-                                            <!-- Original price if discounted -->
                                             <div x-show="(item.discount_amount || 0) > 0 && item.base_price" class="flex items-center space-x-1">
                                                 <span class="text-xs line-through text-gray-400" x-text="formatCurrency(item.base_price)"></span>
                                             </div>
                                         </div>
 
-                                        <!-- Purchase limits -->
-                                        <div class="purchase-limit-indicator mt-1">
-                                            <i class="fas fa-sliders-h mr-1"></i>
-                                            <span x-text="'Min: ' + (item.min_purchase || 1)"></span>
-                                            <span class="mx-1">•</span>
-                                            <span x-text="'Max: ' + (item.max_purchase || 'Unlimited')"></span>
-                                        </div>
+                                        
                                     </div>
 
-                                    <!-- Quantity controls and subtotal -->
                                     <div class="flex items-center justify-between w-full sm:w-auto space-x-4">
-                                        <!-- Quantity stepper -->
                                         <div class="quantity-stepper flex items-center space-x-2 px-2 py-1"
                                              :class="{ 'has-limits': (item.min_purchase || 1) > 1 || item.max_purchase }">
                                             <button
@@ -359,14 +340,13 @@
                                             </button>
                                         </div>
                                         
-                                        <!-- Price and remove button -->
                                         <div class="flex items-center space-x-2 ml-auto sm:ml-4">
                                             <div class="text-right">
                                                 <div class="text-lg font-bold text-gray-900" 
                                                      x-text="formatCurrency(item.quantity * item.price)"></div>
                                                 <div x-show="(item.discount_amount || 0) > 0" 
                                                      class="text-xs text-green-600 font-medium">
-                                                    <span x-text="'Hemat: ' + formatCurrency(item.discount_amount || 0)"></span>
+                                                     <span x-text="'Hemat: ' + formatCurrency(item.discount_amount || 0)"></span>
                                                 </div>
                                             </div>
                                             <button
@@ -383,9 +363,7 @@
                 </div>
             </div>
 
-            <!-- Right Column - Summary and Payment -->
             <div class="space-y-6">
-                <!-- Summary Section -->
                 <div class="bg-white rounded-xl shadow-lg p-6 border border-blue-100">
                     <h2 class="text-xl font-semibold mb-6 text-gray-900 flex items-center">
                         <i class="fas fa-calculator text-blue-600 mr-2"></i>
@@ -397,7 +375,6 @@
                             <span class="font-bold text-lg" x-text="formatCurrency(subtotal)"></span>
                         </div>
                         
-                        <!-- Total savings -->
                         <div x-show="totalSavings > 0" class="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
                             <div class="flex items-center space-x-2">
                                 <i class="fas fa-piggy-bank text-green-600"></i>
@@ -406,7 +383,6 @@
                             <span class="font-bold text-lg text-green-800" x-text="formatCurrency(totalSavings)"></span>
                         </div>
                         
-                        <!-- Additional costs -->
                         <div x-show="additionalCosts.length > 0" class="space-y-2">
                             <template x-for="cost in additionalCosts" :key="cost.id">
                                 <div class="flex justify-between items-center p-2 bg-yellow-50 rounded-lg border border-yellow-200">
@@ -437,7 +413,6 @@
                     </div>
                 </div>
 
-                <!-- Payment Section -->
                 <div class="bg-white rounded-xl shadow-lg p-6 border border-blue-100">
                     <h2 class="text-xl font-semibold mb-6 text-gray-900 flex items-center">
                         <i class="fas fa-credit-card text-blue-600 mr-2"></i>
@@ -463,7 +438,6 @@
                             </div>
                         </div>
 
-                        <!-- Quick amount buttons -->
                         <div class="grid grid-cols-2 gap-2">
                             <template x-for="amount in quickAmounts" :key="amount">
                                 <button @click="setQuickAmount(amount)" 
@@ -473,7 +447,6 @@
                             </template>
                         </div>
 
-                        <!-- Exact amount button -->
                         <button @click="setExactAmount()" 
                                 :disabled="totalAmount <= 0"
                                 :class="totalAmount > 0 ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700' : 'bg-gray-300 cursor-not-allowed'"
@@ -482,7 +455,6 @@
                             <span x-text="totalAmount > 0 ? 'Uang Pas (' + formatCurrency(totalAmount) + ')' : 'Uang Pas'"></span>
                         </button>
 
-                        <!-- Change amount -->
                         <div x-show="changeAmount > 0" 
                              class="p-4 bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-lg">
                             <div class="flex justify-between items-center">
@@ -491,7 +463,6 @@
                             </div>
                         </div>
 
-                        <!-- Process transaction button -->
                         <button
                             @click="processTransaction()"
                             :disabled="!canProcessTransaction"
@@ -512,7 +483,6 @@
                     </div>
                 </div>
 
-                <!-- Quick Actions -->
                 <div class="bg-white rounded-xl shadow-lg p-6 border border-blue-100">
                     <h3 class="text-lg font-semibold mb-4 text-gray-900 flex items-center">
                         <i class="fas fa-bolt text-blue-600 mr-2"></i>
@@ -540,9 +510,6 @@
         </div>
     </div>
 
-    <!-- Modals -->
-    
-    <!-- Additional Cost Modal -->
     <div x-show="showAdditionalCostModal" 
          x-transition:enter="transition ease-out duration-300" 
          x-transition:enter-start="opacity-0" 
@@ -619,7 +586,6 @@
         </div>
     </div>
 
-    <!-- Tiered Pricing Modal -->
     <div x-show="showTieredPricingModal" 
          x-transition:enter="transition ease-out duration-300" 
          x-transition:enter-start="opacity-0" 
@@ -729,6 +695,9 @@
                 isProcessingTransaction: false,
                 isSearching: false,
                 
+                // Store all products fetched from the server on page load
+                allProducts: @json($products),
+
                 // Modal states
                 showAdditionalCostModal: false,
                 showTieredPricingModal: false,
@@ -771,7 +740,13 @@
                 // Enhanced add to cart with tiered pricing
                 async addToCart(product, unitId, unitPrice, unitSymbol) {
                     try {
-                        const productUnit = product.units.find(u => u.unit_id === unitId);
+                        // Find the product and its specific unit from the local data
+                        const localProduct = this.allProducts.find(p => p.id === product.id);
+                        if (!localProduct) {
+                            this.showNotification('error', 'Produk tidak ditemukan di data lokal');
+                            return;
+                        }
+                        const productUnit = localProduct.product_units.find(u => u.unit_id === unitId);
                         if (!productUnit) {
                             this.showNotification('error', 'Informasi satuan tidak ditemukan');
                             return;
@@ -788,11 +763,18 @@
                             quantity = productUnit.min_purchase > 1 ? productUnit.min_purchase : 1;
                         }
 
-                        // Calculate tiered price
-                        const priceData = await this.calculateTieredPrice(product.id, unitId, quantity);
+                        // Calculate tiered price using a new, more efficient method
+                        const priceData = this.calculateTieredPriceLocally(productUnit, quantity);
                         
                         if (!priceData.success) {
                             this.showNotification('warning', priceData.message);
+                            return;
+                        }
+                        
+                        // Check stock locally
+                        const stockInfo = localProduct.stocks.find(s => s.unit_id === unitId);
+                        if (!stockInfo || stockInfo.quantity < quantity) {
+                            this.showNotification('error', `Stok tidak mencukupi. Tersedia: ${stockInfo ? stockInfo.quantity : '0'} ${unitSymbol}`);
                             return;
                         }
 
@@ -817,8 +799,8 @@
                                 base_price: priceData.data.base_price,
                                 price: priceData.data.final_price,
                                 quantity: quantity,
-                                min_purchase: priceData.data.min_purchase,
-                                max_purchase: priceData.data.max_purchase,
+                                min_purchase: productUnit.min_purchase || 1,
+                                max_purchase: productUnit.max_purchase || null,
                                 enable_tiered_pricing: productUnit.enable_tiered_pricing,
                                 tiered_prices: productUnit.tiered_prices || [],
                                 applied_tier: priceData.data.applied_tier,
@@ -831,17 +813,58 @@
                         this.searchResults = [];
                         this.saveCartToStorage();
                         
-                        if (priceData.data.applied_tier) {
-                            this.showNotification('success', 
-                                `${product.name} ditambahkan dengan harga tier: ${this.formatCurrency(priceData.data.final_price)}`
-                            );
-                        } else {
-                            this.showNotification('success', `${product.name} ditambahkan ke keranjang`);
-                        }
+                       
                     } catch (error) {
                         console.error('Error adding to cart:', error);
                         this.showNotification('error', 'Terjadi kesalahan saat menambahkan produk');
                     }
+                },
+
+                // NEW: Calculate tiered price locally
+                calculateTieredPriceLocally(productUnit, quantity) {
+                    const minPurchase = productUnit.min_purchase || 1;
+                    const maxPurchase = productUnit.max_purchase;
+
+                    if (quantity < minPurchase) {
+                        return { success: false, message: `Minimal pembelian ${minPurchase} unit` };
+                    }
+                    if (maxPurchase && quantity > maxPurchase) {
+                        return { success: false, message: `Maksimal pembelian ${maxPurchase} unit` };
+                    }
+
+                    let finalPrice = productUnit.price;
+                    let appliedTier = null;
+                    let tieredPrices = productUnit.tiered_prices.sort((a, b) => b.min_quantity - a.min_quantity);
+
+                    if (productUnit.enable_tiered_pricing && tieredPrices.length > 0) {
+                        for (const tier of tieredPrices) {
+                            if (quantity >= tier.min_quantity) {
+                                finalPrice = tier.price;
+                                appliedTier = {
+                                    min_quantity: tier.min_quantity,
+                                    price: tier.price,
+                                    description: tier.description,
+                                };
+                                break;
+                            }
+                        }
+                    }
+                    
+                    const discountAmount = (productUnit.price - finalPrice) * quantity;
+
+                    return {
+                        success: true,
+                        data: {
+                            base_price: productUnit.price,
+                            final_price: finalPrice,
+                            quantity: quantity,
+                            subtotal: finalPrice * quantity,
+                            applied_tier: appliedTier,
+                            min_purchase: minPurchase,
+                            max_purchase: maxPurchase,
+                            discount_amount: discountAmount
+                        }
+                    };
                 },
 
                 // Enhanced update quantity with tiered pricing
@@ -865,8 +888,24 @@
                     }
                 
                     try {
-                        const priceData = await this.calculateTieredPrice(item.product_id, item.unit_id, newQuantity);
-                
+                        const localProduct = this.allProducts.find(p => p.id === item.product_id);
+                        if (!localProduct) {
+                            this.showNotification('error', 'Produk tidak ditemukan di data lokal.');
+                            return;
+                        }
+                        const productUnit = localProduct.product_units.find(u => u.unit_id === item.unit_id);
+                        if (!productUnit) {
+                            this.showNotification('error', 'Informasi satuan tidak ditemukan.');
+                            return;
+                        }
+                        const stockInfo = localProduct.stocks.find(s => s.unit_id === item.unit_id);
+                        if (!stockInfo || stockInfo.quantity < newQuantity) {
+                            this.showNotification('error', `Stok tidak mencukupi. Tersedia: ${stockInfo ? stockInfo.quantity : '0'} ${item.unit_symbol}`);
+                            return;
+                        }
+                        
+                        const priceData = this.calculateTieredPriceLocally(productUnit, newQuantity);
+                        
                         if (!priceData.success) {
                             this.showNotification('warning', priceData.message);
                             return;
@@ -894,34 +933,6 @@
                     }
                 },
 
-                // Calculate tiered price
-                async calculateTieredPrice(productId, unitId, quantity) {
-                    try {
-                        const response = await fetch('/api/pos/calculate-tiered-price', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': this.getCSRFToken(),
-                                'Accept': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                product_id: productId,
-                                unit_id: unitId,
-                                quantity: quantity
-                            })
-                        });
-
-                        const data = await response.json();
-                        return data;
-                    } catch (error) {
-                        console.error('Error calculating tiered price:', error);
-                        return {
-                            success: false,
-                            message: 'Terjadi kesalahan saat menghitung harga'
-                        };
-                    }
-                },
-
                 // Show tiered pricing info
                 showTieredPricingInfo(item) {
                     this.selectedTieredItem = item;
@@ -930,43 +941,33 @@
 
                 // Search methods
                 async handleSearch() {
-                    if (this.searchQuery.length < 2) {
+                    const query = this.searchQuery.trim().toLowerCase();
+                    if (query.length < 2) {
                         this.searchResults = [];
                         return;
                     }
 
                     this.isSearching = true;
 
-                    try {
-                        if (/^\d{8,}$/.test(this.searchQuery)) {
-                            await this.handleBarcodeSearch(this.searchQuery);
+                    // Check if it's a barcode (pure numbers, 8+ digits)
+                    if (/^\d{8,}$/.test(query)) {
+                        // Search for barcode locally first
+                        const localProduct = this.allProducts.find(p => p.barcode === query);
+                        if (localProduct) {
+                            await this.addToCart(localProduct, localProduct.product_units[0].unit_id, localProduct.product_units[0].price, localProduct.product_units[0].unit.symbol);
+                            this.searchResults = [];
                         } else {
-                            await this.performProductSearch(this.searchQuery);
+                            // Fallback to server search if not found locally
+                            await this.handleBarcodeSearch(query);
                         }
-                    } catch (error) {
-                        console.error('Search error:', error);
-                        this.showNotification('error', 'Terjadi kesalahan saat mencari produk');
-                    } finally {
-                        this.isSearching = false;
-                    }
-                },
-
-                async performProductSearch(query) {
-                    const response = await fetch(`/api/pos/search-product?query=${encodeURIComponent(query)}`, {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': this.getCSRFToken(),
-                            'Accept': 'application/json'
-                        }
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                    } else {
+                        // Perform local search for product name
+                        this.searchResults = this.allProducts.filter(product => {
+                            return product.name.toLowerCase().includes(query) || (product.barcode && product.barcode.includes(query));
+                        }).slice(0, 20); // Limit results for performance
                     }
 
-                    const data = await response.json();
-                    this.searchResults = Array.isArray(data) ? data : [];
+                    this.isSearching = false;
                 },
 
                 async handleBarcodeSearch(barcode) {
@@ -989,10 +990,11 @@
                                 await this.addToCart(product, firstUnit.unit_id, firstUnit.price, firstUnit.unit_symbol);
                             }
                         } else {
-                            await this.performProductSearch(barcode);
+                            this.showNotification('error', 'Produk tidak ditemukan.');
                         }
                     } catch (error) {
-                        await this.performProductSearch(barcode);
+                        console.error('Barcode search error:', error);
+                        this.showNotification('error', 'Terjadi kesalahan saat mencari produk');
                     }
                 },
 

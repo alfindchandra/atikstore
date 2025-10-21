@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title ?? 'POS Toko Kelontong' }}</title>
+    <title>{{ config('app.toko') }}</title>
 
     <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -24,7 +24,7 @@
             <!-- Logo -->
             <div class="flex items-center">
                 <a href="{{ route('dashboard') }}" class="text-xl font-bold text-blue-600">
-                    POS Toko Kelontong
+                    {{ config('app.toko') }}
                 </a>
             </div>
 
@@ -147,9 +147,37 @@
                     <i class="fas fa-calendar-alt mr-1"></i>
                     <span id="current-time"></span>
                 </span>
-                <div class="bg-blue-100 rounded-full p-2">
-                    <i class="fas fa-user text-blue-600"></i>
+                <div class="relative" x-data="{ open: false }">
+                    <button @click="open = !open" @click.away="open = false" class="flex items-center focus:outline-none">
+                        <div class="bg-blue-100 rounded-full p-2">
+                            <i class="fas fa-user text-blue-600"></i>
+                        </div>
+                        
+                        <svg class="w-4 h-4 ml-1 transition-transform" :class="{ 'rotate-180': open }" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    <div x-show="open" 
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 scale-95"
+                        x-transition:enter-end="opacity-100 scale-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 scale-100"
+                        x-transition:leave-end="opacity-0 scale-95"
+                        class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-20 origin-top-right">
+                        <div class="py-1">                          
+                            <a href="{{ route('logout') }}" 
+                               onclick="event.preventDefault(); document.getElementById('logout-form').submit();" 
+                               class="block px-4 py-2 text-sm text-gray-700 hover:text-blue-600 hover:bg-gray-200">
+                                <i class="fas fa-sign-out-alt mr-2 text-red-500"></i>Logout
+                            </a>
+                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
+                                @csrf
+                            </form>
+                        </div>
+                    </div>
                 </div>
+
             </div>
 
             <!-- Hamburger Menu (Mobile) -->
@@ -217,9 +245,39 @@
             <i class="fas fa-calendar-alt mr-1"></i>
             <span id="mobile-time"></span>
         </span>
-        <div class="bg-blue-100 rounded-full p-2">
-            <i class="fas fa-user text-blue-600"></i>
-        </div>
+        <div class="relative" x-data="{ open: false }">
+                    <button @click="open = !open" @click.away="open = false" class="flex items-center focus:outline-none">
+                        <div class="bg-blue-100 rounded-full p-2">
+                            <i class="fas fa-user text-blue-600"></i>
+                        </div>
+                        
+                        <svg class="w-4 h-4 ml-1 transition-transform" :class="{ 'rotate-180': open }" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    <div x-show="open" 
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 scale-95"
+                        x-transition:enter-end="opacity-100 scale-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 scale-100"
+                        x-transition:leave-end="opacity-0 scale-95"
+                        class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-20 origin-top-right">
+                        <div class="py-1">                          
+                            <a href="{{ route('logout') }}" 
+                               onclick="event.preventDefault(); document.getElementById('logout-form').submit();" 
+                               class="block px-4 py-2 text-sm text-gray-700 hover:text-blue-600 hover:bg-gray-200">
+                                <i class="fas fa-sign-out-alt mr-2 text-red-500"></i>Logout
+                            </a>
+                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
+                                @csrf
+                            </form>
+                        </div>
+                    </div>
+                </div>
+        
+
+            </div>
     </div>
 </div>
 </nav>
@@ -259,6 +317,25 @@
         document.getElementById("mobile-menu").classList.toggle("hidden");
     });
 </script>
+<script>
+        // Mengambil elemen tombol menu dan dropdown
+        const menuBtn = document.getElementById('menu-btn');
+        const dropdownMenu = document.getElementById('dropdown-menu');
 
+        // Menambahkan event listener saat tombol menu di-klik
+        menuBtn.addEventListener('click', () => {
+            // Toggle (munculkan/sembunyikan) class 'hidden' pada dropdown
+            dropdownMenu.classList.toggle('hidden');
+        });
+
+        // Menutup dropdown jika pengguna mengklik di luar area menu
+        window.addEventListener('click', (event) => {
+            // Cek apakah yang diklik bukan tombol menu dan bukan bagian dari dropdown
+            if (!menuBtn.contains(event.target) && !dropdownMenu.contains(event.target)) {
+                // Sembunyikan dropdown dengan menambahkan kembali class 'hidden'
+                dropdownMenu.classList.add('hidden');
+            }
+        });
+    </script>
 </body>
 </html>

@@ -228,4 +228,10 @@ public function store(Request $request)
             'is_active' => $product->is_active
         ]);
     }
+    public function show(Product $product)
+    {
+        $product->load(['category', 'productUnits.unit', 'stocks.unit', 'tieredPrices']);
+
+        return view('products.show', compact('product'));
+    }
 }

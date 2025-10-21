@@ -30,7 +30,7 @@
                 <li>{{ $error }}</li>
             @endforeach
         </ul>
-    </div>
+    </div> 
 @endif
 
       <form action="{{ route('login.validate') }}" method="post">

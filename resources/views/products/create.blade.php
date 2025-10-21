@@ -274,7 +274,7 @@
                     </div>
                     
                     <div class="tiered-prices">
-                        <!-- Tiered price items will be added here -->
+                       
                     </div>
                     
                     <button type="button" onclick="addTieredPrice(this)" 

@@ -112,9 +112,9 @@
 </head>
 <body>
     <div class="header">
-        <div class="store-name">TOKO KELONTONG</div>
-        <div class="store-info">Jl. Contoh No. 123</div>
-        <div class="store-info">Telp: 021-12345678</div>
+        <div class="store-name">TOKO MBK YANTI</div>
+        <div class="store-info">Ds. Dander Rt.33 Rw.04</div>
+        
     </div>
 
     <div class="transaction-info">

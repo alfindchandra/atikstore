@@ -9,36 +9,45 @@ use App\Models\User;
 
 class LoginController extends Controller
 {
+    
+
     public function index()
     {
-        return view('auth.login');
+        return view('auth.loginaja');
     }
+
     public function loginvalidate(Request $request)
     {
-        $credentials = $request->validate( [
+        $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required',
-        ],
-        [
+        ], [
             'email.required' => 'Email anda tidak boleh kosong',
+            'email.email' => 'Format email tidak valid',
             'password.required' => 'Password anda tidak boleh kosong',
         ]);
 
-        if (Auth::attempt($credentials)) {
+        // Cek apakah user mencoba login terlalu sering
+        if (Auth::attempt($credentials, $request->filled('remember'))) {
             $request->session()->regenerate();
-            return redirect()->intended('/dashboard');
+            
+            // Redirect ke halaman yang diminta sebelumnya atau ke dashboard
+            return redirect()->intended('/')->with('success', 'Login berhasil! Selamat datang kembali.');
         }
 
+        // Jika login gagal
         return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
+            'email' => 'Email atau password yang Anda masukkan salah.',
         ])->onlyInput('email');
+    }
 
-    }   
     public function logout(Request $request)
     {
         Auth::logout();
+        
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect('/');
+        
+        return redirect('/login')->with('success', 'Anda telah berhasil logout.');
     }
 }

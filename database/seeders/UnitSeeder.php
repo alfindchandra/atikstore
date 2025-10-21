@@ -10,18 +10,20 @@ class UnitSeeder extends Seeder
     public function run(): void
     {
         $units = [
+            ['name' => 'Renteng', 'symbol' => 'rtg'],
+            ['name' => 'Pieces', 'symbol' => 'pcs'],
             ['name' => 'Gram', 'symbol' => 'g'],
             ['name' => 'Kilogram', 'symbol' => 'kg'],
-            ['name' => 'Pieces', 'symbol' => 'pcs'],
+            ['name' => '1/2 Kilogram', 'symbol' => '1/2 kg'],
+            ['name' => '1/4 Kilogram', 'symbol' => '1/4 kg'],
+            ['name' => 'Ons', 'symbol' => 'ons'],
+            ['name' => '1/2 Ons', 'symbol' => '1/2 ons'],
             ['name' => 'Pack', 'symbol' => 'pack'],
             ['name' => 'Dus', 'symbol' => 'dus'],
-            ['name' => 'Karton', 'symbol' => 'ktn'],
             ['name' => 'Liter', 'symbol' => 'l'],
             ['name' => 'Milliliter', 'symbol' => 'ml'],
-            ['name' => 'Dozen', 'symbol' => 'dzn'],
-            ['name' => 'Botol', 'symbol' => 'btl'],
-            ['name' => 'Kaleng', 'symbol' => 'klg'],
-            ['name' => 'Sachet', 'symbol' => 'sct'],
+            
+
         ];
 
         foreach ($units as $unit) {

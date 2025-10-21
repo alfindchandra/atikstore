@@ -8,6 +8,7 @@ use App\Models\TransactionDetail;
 use App\Models\CashFlow;
 use App\Models\Stock;
 use App\Models\StockMovement;
+use App\Models\ProductUnit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -176,23 +177,13 @@ class POSController extends Controller
                 'quantity' => 'required|numeric|min:0.01',
             ]);
 
-            $product = Product::with([
-                'productUnits' => function($query) use ($validatedData) {
-                    $query->where('unit_id', $validatedData['unit_id'])
-                          ->with(['tieredPrices' => function($q) {
-                              $q->orderBy('min_quantity', 'desc');
-                          }]);
-                }
-            ])->find($validatedData['product_id']);
+            $productUnit = ProductUnit::with(['tieredPrices' => function($q) {
+                $q->orderBy('min_quantity', 'desc');
+            }])
+            ->where('product_id', $validatedData['product_id'])
+            ->where('unit_id', $validatedData['unit_id'])
+            ->first();
 
-            if (!$product) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Produk tidak ditemukan'
-                ]);
-            }
-
-            $productUnit = $product->productUnits->first();
             if (!$productUnit) {
                 return response()->json([
                     'success' => false,
@@ -296,29 +287,27 @@ class POSController extends Controller
             $processedItems = [];
 
             foreach ($validatedData['items'] as $item) {
-                $product = Product::with([
-                    'productUnits' => function($query) use ($item) {
-                        $query->where('unit_id', $item['unit_id'])
-                              ->with(['tieredPrices' => function($q) {
-                                  $q->orderBy('min_quantity', 'desc');
-                              }]);
-                    }, 
-                    'stocks' => function($query) use ($item) {
-                        $query->where('unit_id', $item['unit_id']);
-                    }
-                ])->find($item['product_id']);
-
+                $product = Product::find($item['product_id']);
                 if (!$product) {
                     throw new \Exception('Produk dengan ID ' . $item['product_id'] . ' tidak ditemukan.');
                 }
 
-                $productUnit = $product->productUnits->first();
+                $productUnit = ProductUnit::with(['tieredPrices' => function($q) {
+                    $q->orderBy('min_quantity', 'desc');
+                }])
+                ->where('product_id', $item['product_id'])
+                ->where('unit_id', $item['unit_id'])
+                ->first();
+
                 if (!$productUnit) {
                     throw new \Exception("Satuan tidak ditemukan untuk produk '{$product->name}'.");
                 }
 
                 // Check stock availability
-                $stock = $product->stocks->first();
+                $stock = Stock::where('product_id', $item['product_id'])
+                    ->where('unit_id', $item['unit_id'])
+                    ->first();
+
                 if (!$stock) {
                     throw new \Exception("Stok untuk produk '{$product->name}' tidak ditemukan.");
                 }
@@ -493,7 +482,7 @@ class POSController extends Controller
     public function receipt(Transaction $transaction)
     {
         $transaction->load(['details.product', 'details.unit']);
-        return view('pos.receipt', compact('transaction'));
+        return view('pos.print-receipt', compact('transaction'));
     }
 
     public function printReceipt(Transaction $transaction)
