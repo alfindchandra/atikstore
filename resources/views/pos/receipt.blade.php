@@ -1,118 +1,190 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Struk - {{ $transaction->transaction_number }}</title>
+    <style>
+        @media print {
+            body { margin: 0; }
+            .no-print { display: none; }
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            max-width: 300px;
+            margin: 20px auto;
+            padding: 10px;
+        }
+        
+        .receipt {
+            border: 1px dashed #000;
+            padding: 10px;
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .store-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .transaction-info {
+            font-size: 11px;
+            margin-bottom: 10px;
+        }
+        
+        table {
+            width: 100%;
+            font-size: 11px;
+            margin-bottom: 10px;
+        }
+        
+        .item-row td {
+            padding: 3px 0;
+        }
+        
+        .separator {
+            border-top: 1px dashed #000;
+            margin: 10px 0;
+        }
+        
+        .totals {
+            font-size: 12px;
+        }
+        
+        .totals td {
+            padding: 2px 0;
+        }
+        
+        .total-amount {
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .footer {
+            text-align: center;
+            font-size: 11px;
+            margin-top: 10px;
+            border-top: 1px dashed #000;
+            padding-top: 10px;
+        }
+        
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            margin: 0 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn-print {
+            background-color: #3B82F6;
+            color: white;
+        }
+        
+        .btn-close {
+            background-color: #6B7280;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="receipt">
+        <!-- Header -->
+        <div class="header">
+            <div class="store-name">{{ config('app.toko') }}</div>
+            <div style="font-size: 10px;">Terima kasih atas kunjungan Anda</div>
+        </div>
 
-@section('content')
-<div class="max-w-2xl mx-auto">
-    <div class="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
-        <div class="p-6">
-            <div class="text-center mb-6">
-                <h1 class="text-2xl font-bold text-gray-800 mb-2">Struk Belanja</h1>
-                <p class="text-gray-600">{{ config('app.name', 'Toko Kelontong') }}</p>
-                <p class="text-sm text-gray-500">Jl. Contoh No. 123, Kota</p>
-                <p class="text-sm text-gray-500">Telp: (021) 1234-5678</p>
-            </div>
+        <!-- Transaction Info -->
+        <div class="transaction-info">
+            <div>No: {{ $transaction->transaction_number }}</div>
+            <div>Tanggal: {{ $transaction->transaction_date->format('d/m/Y H:i') }}</div>
+            <div>Kasir: {{ auth()->user()->name ?? 'Admin' }}</div>
+        </div>
 
-            <div class="border-t border-b border-gray-200 py-4 mb-4">
-                <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                        <p class="text-gray-600">No. Transaksi:</p>
-                        <p class="font-semibold">{{ $transaction->transaction_number }}</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-gray-600">Tanggal:</p>
-                        <p class="font-semibold">{{ $transaction->transaction_date->format('d/m/Y H:i:s') }}</p>
-                    </div>
-                </div>
-            </div>
+        <div class="separator"></div>
 
-            <div class="mb-6">
-                <table class="w-full">
-                    <thead>
-                        <tr class="border-b border-gray-200">
-                            <th class="text-left py-2 font-semibold">Item</th>
-                            <th class="text-center py-2 font-semibold">Qty</th>
-                            <th class="text-right py-2 font-semibold">Harga</th>
-                            <th class="text-right py-2 font-semibold">Subtotal</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($transaction->details as $detail)
-                        <tr class="border-b border-gray-100">
-                            <td class="py-2">
-                                <div>
-                                    <p class="font-medium">{{ $detail->product->name }}</p>
-                                    <p class="text-xs text-gray-500">{{ $detail->unit->symbol ?? 'pcs' }}</p>
-                                </div>
-                            </td>
-                            <td class="text-center py-2">{{ number_format($detail->quantity, 0, ',', '.') }}</td>
-                            <td class="text-right py-2">Rp {{ number_format($detail->unit_price, 0, ',', '.') }}</td>
-                            <td class="text-right py-2 font-medium">Rp {{ number_format($detail->subtotal, 0, ',', '.') }}</td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+        <!-- Items -->
+        <table>
+            @foreach($transaction->details as $detail)
+            <tr class="item-row">
+                <td colspan="3">{{ $detail->product->name }}</td>
+            </tr>
+            <tr class="item-row">
+                <td style="padding-left: 10px;">
+                    {{ number_format($detail->quantity, 0) }} {{ $detail->unit->symbol }} x {{ number_format($detail->unit_price, 0) }}
+                </td>
+                <td></td>
+                <td style="text-align: right;">
+                    {{ number_format($detail->subtotal, 0) }}
+                </td>
+            </tr>
+            @endforeach
+        </table>
 
-            <div class="border-t border-gray-200 pt-4 space-y-2">
-                <div class="flex justify-between">
-                    <span class="font-medium">Subtotal:</span>
-                    <span>Rp {{ number_format($transaction->subtotal, 0, ',', '.') }}</span>
-                </div>
-                @if($transaction->tax_amount > 0)
-                <div class="flex justify-between">
-                    <span class="font-medium">Biaya tambahan:</span>
-                    <span>Rp {{ number_format($transaction->tax_amount, 0, ',', '.') }}</span>
-                </div>
-                @endif
-                
-                @if($transaction->notes)
-                <div class="text-sm text-gray-600 bg-gray-50 p-2 rounded">
-                    {{ $transaction->notes }}
-                </div>
-                @endif
+        <div class="separator"></div>
 
-                
-                <div class="border-t border-gray-300 pt-2">
-                    <div class="flex justify-between text-lg font-bold">
-                        <span>TOTAL:</span>
-                        <span>Rp {{ number_format($transaction->total_amount, 0, ',', '.') }}</span>
-                    </div>
-                </div>
+        <!-- Totals -->
+        <table class="totals">
+            <tr>
+                <td>Subtotal:</td>
+                <td style="text-align: right;">Rp {{ number_format($transaction->subtotal, 0) }}</td>
+            </tr>
+            @if($transaction->tax_amount > 0)
+            <tr>
+                <td>Biaya Tambahan:</td>
+                <td style="text-align: right;">Rp {{ number_format($transaction->tax_amount, 0) }}</td>
+            </tr>
+            @endif
+            <tr class="total-amount">
+                <td>TOTAL:</td>
+                <td style="text-align: right;">Rp {{ number_format($transaction->total_amount, 0) }}</td>
+            </tr>
+            <tr>
+                <td>Bayar:</td>
+                <td style="text-align: right;">Rp {{ number_format($transaction->paid_amount, 0) }}</td>
+            </tr>
+            <tr>
+                <td>Kembalian:</td>
+                <td style="text-align: right;">Rp {{ number_format($transaction->change_amount, 0) }}</td>
+            </tr>
+        </table>
 
-                <div class="flex justify-between">
-                    <span>Bayar:</span>
-                    <span>Rp {{ number_format($transaction->paid_amount, 0, ',', '.') }}</span>
-                </div>
-
-                <div class="flex justify-between text-lg font-semibold text-green-600">
-                    <span>Kembalian:</span>
-                    <span>Rp {{ number_format($transaction->change_amount, 0, ',', '.') }}</span>
-                </div>
-            </div>
-
-            <div class="text-center mt-6 pt-4 border-t border-gray-200">
-                <p class="text-sm text-gray-600">Terima kasih atas kunjungan Anda!</p>
-                <p class="text-xs text-gray-500 mt-1">Barang yang sudah dibeli tidak dapat dikembalikan</p>
-            </div>
+        <!-- Footer -->
+        <div class="footer">
+            <div>*** TERIMA KASIH ***</div>
+            <div style="margin-top: 5px;">Barang yang sudah dibeli</div>
+            <div>tidak dapat ditukar/dikembalikan</div>
         </div>
     </div>
 
-    <div class="mt-6 flex justify-center space-x-4">
-        <a href="{{ route('pos.index') }}" 
-           class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors">
-            <i class="fas fa-arrow-left mr-2"></i>
-            Kembali ke Kasir
-        </a>
-        <button onclick="printReceipt()" 
-                class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors">
-            <i class="fas fa-print mr-2"></i>
-            Print Struk
+    <!-- Print Buttons -->
+    <div class="button-container no-print">
+        <button onclick="window.print()" class="btn btn-print">
+            <i class="fas fa-print"></i> Cetak
+        </button>
+        <button onclick="window.close()" class="btn btn-close">
+            <i class="fas fa-times"></i> Tutup
         </button>
     </div>
-</div>
 
-<script>
-function printReceipt() {
-    window.open('{{ route('pos.print-receipt', $transaction->id) }}', '_blank', 'width=400,height=600');
-}
-</script>
-@endsection
+    <script>
+        // Auto print on load (optional)
+        // window.onload = function() { window.print(); }
+    </script>
+</body>
+</html>

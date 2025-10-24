@@ -10,14 +10,12 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
-        /* (Gaya CSS tetap sama, tidak ada perubahan) */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
         body {
             font-family: 'Inter', sans-serif;
         }
         
-        /* Loading Animation */
         .loading-spinner {
             display: inline-block;
             width: 20px;
@@ -33,7 +31,6 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* Custom Scrollbar */
         .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
         }
@@ -52,7 +49,6 @@
             background: #a8a8a8;
         }
         
-        /* Tier badge styles */
         .tier-badge {
             background: linear-gradient(45deg, #f59e0b, #d97706);
             color: white;
@@ -142,7 +138,6 @@
             border-left: 4px solid #0ea5e9;
         }
         
-        /* Quick pay button hover effects */
         .quick-pay-btn {
             transition: all 0.2s ease-in-out;
         }
@@ -152,12 +147,10 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
         
-        /* Modal styles */
         .modal-backdrop {
             backdrop-filter: blur(4px);
         }
         
-        /* Cart item animations */
         .cart-item {
             transition: all 0.3s ease;
         }
@@ -165,6 +158,30 @@
         .cart-item:hover {
             transform: translateX(4px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tier-progress {
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+        
+        .tier-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+            transition: width 0.3s ease;
+        }
+        
+        .tier-notify {
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
     </style>
 </head>
@@ -220,8 +237,6 @@
                                                              <i class="fas fa-layer-group mr-1"></i>
                                                              <span x-text="unit.tiered_prices.length + ' tier harga'"></span>
                                                         </div>
-                                                        
-                                                       
                                                     </button>
                                                     
                                                     <div x-show="unit.enable_tiered_pricing && unit.tiered_prices?.length > 0" 
@@ -316,8 +331,15 @@
                                                 <span class="text-xs line-through text-gray-400" x-text="formatCurrency(item.base_price)"></span>
                                             </div>
                                         </div>
-
                                         
+                                        <!-- Progress bar untuk tier pricing -->
+                                        <div x-show="item.enable_tiered_pricing && item.tiered_prices?.length > 0" class="mt-2">
+                                            <div class="tier-progress">
+                                                <div class="tier-progress-bar" 
+                                                     :style="`width: ${getTierProgress(item)}%`"></div>
+                                            </div>
+                                            <div class="text-xs text-gray-500 mt-1" x-text="getTierProgressText(item)"></div>
+                                        </div>
                                     </div>
 
                                     <div class="flex items-center justify-between w-full sm:w-auto space-x-4">
@@ -510,6 +532,7 @@
         </div>
     </div>
 
+    <!-- Additional Cost Modal -->
     <div x-show="showAdditionalCostModal" 
          x-transition:enter="transition ease-out duration-300" 
          x-transition:enter-start="opacity-0" 
@@ -586,6 +609,7 @@
         </div>
     </div>
 
+    <!-- Tiered Pricing Info Modal -->
     <div x-show="showTieredPricingModal" 
          x-transition:enter="transition ease-out duration-300" 
          x-transition:enter-start="opacity-0" 
@@ -625,7 +649,8 @@
                             <h5 class="font-medium text-gray-800 mb-2">Tingkat Harga:</h5>
                             <div class="space-y-2">
                                 <template x-for="tier in selectedTieredItem?.tiered_prices" :key="tier.min_quantity">
-                                    <div class="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                                    <div class="bg-orange-50 border border-orange-200 rounded-lg p-3"
+                                         :class="{ 'ring-2 ring-green-500': selectedTieredItem?.applied_tier?.min_quantity === tier.min_quantity }">
                                         <div class="flex justify-between items-center mb-1">
                                             <span class="text-orange-800 font-medium" x-text="'≥ ' + tier.min_quantity + ' unit'"></span>
                                             <span class="text-orange-900 font-bold" x-text="formatCurrency(tier.price)"></span>
@@ -633,6 +658,11 @@
                                         <div x-show="tier.description" class="text-xs text-orange-700" x-text="tier.description"></div>
                                         <div class="text-xs text-green-600 font-medium mt-1">
                                             <span x-text="'Hemat: ' + formatCurrency((selectedTieredItem?.base_price || selectedTieredItem?.price || 0) - tier.price) + ' per unit'"></span>
+                                        </div>
+                                        <div x-show="selectedTieredItem?.applied_tier?.min_quantity === tier.min_quantity" 
+                                             class="text-xs text-green-600 font-medium mt-1 tier-notify">
+                                            <i class="fas fa-check-circle mr-1"></i>
+                                            Tier Aktif
                                         </div>
                                     </div>
                                 </template>
@@ -686,7 +716,6 @@
     <script>
         function enhancedPosSystem() {
             return {
-                // Core data
                 cart: [],
                 searchQuery: '',
                 searchResults: [],
@@ -695,32 +724,25 @@
                 isProcessingTransaction: false,
                 isSearching: false,
                 
-                // Store all products fetched from the server on page load
                 allProducts: @json($products),
 
-                // Modal states
                 showAdditionalCostModal: false,
                 showTieredPricingModal: false,
                 
-                // Tiered pricing
                 selectedTieredItem: null,
                 
-                // Form states
                 newAdditionalCost: {
                     description: '',
                     customDescription: '',
                     amount: 0
                 },
                 
-                // Constants
                 quickAmounts: [10000, 20000, 50000, 100000],
 
-                // Initialize POS system
                 initializePOS() {
                     this.loadCartFromStorage();
                     this.loadAdditionalCostsFromStorage();
                     
-                    // Keyboard shortcuts
                     document.addEventListener('keydown', (e) => {
                         if (e.key === 'F1') {
                             e.preventDefault();
@@ -737,10 +759,8 @@
                     });
                 },
 
-                // Enhanced add to cart with tiered pricing
                 async addToCart(product, unitId, unitPrice, unitSymbol) {
                     try {
-                        // Find the product and its specific unit from the local data
                         const localProduct = this.allProducts.find(p => p.id === product.id);
                         if (!localProduct) {
                             this.showNotification('error', 'Produk tidak ditemukan di data lokal');
@@ -763,7 +783,6 @@
                             quantity = productUnit.min_purchase > 1 ? productUnit.min_purchase : 1;
                         }
 
-                        // Calculate tiered price using a new, more efficient method
                         const priceData = this.calculateTieredPriceLocally(productUnit, quantity);
                         
                         if (!priceData.success) {
@@ -771,7 +790,6 @@
                             return;
                         }
                         
-                        // Check stock locally
                         const stockInfo = localProduct.stocks.find(s => s.unit_id === unitId);
                         if (!stockInfo || stockInfo.quantity < quantity) {
                             this.showNotification('error', `Stok tidak mencukupi. Tersedia: ${stockInfo ? stockInfo.quantity : '0'} ${unitSymbol}`);
@@ -779,7 +797,6 @@
                         }
 
                         if (existingItemIndex >= 0) {
-                            // Update existing item
                             const updatedItem = {
                                 ...this.cart[existingItemIndex],
                                 quantity: quantity,
@@ -789,7 +806,6 @@
                             };
                             this.cart.splice(existingItemIndex, 1, updatedItem);
                         } else {
-                            // Add new item
                             const newItem = {
                                 id: Date.now() + Math.random(),
                                 product_id: product.id,
@@ -813,14 +829,15 @@
                         this.searchResults = [];
                         this.saveCartToStorage();
                         
-                       
+                        if (priceData.data.applied_tier) {
+                            this.showNotification('success', `Tier ${priceData.data.applied_tier.min_quantity} diterapkan! Hemat ${this.formatCurrency(priceData.data.discount_amount)}`);
+                        }
                     } catch (error) {
                         console.error('Error adding to cart:', error);
                         this.showNotification('error', 'Terjadi kesalahan saat menambahkan produk');
                     }
                 },
 
-                // NEW: Calculate tiered price locally
                 calculateTieredPriceLocally(productUnit, quantity) {
                     const minPurchase = productUnit.min_purchase || 1;
                     const maxPurchase = productUnit.max_purchase;
@@ -834,7 +851,7 @@
 
                     let finalPrice = productUnit.price;
                     let appliedTier = null;
-                    let tieredPrices = productUnit.tiered_prices.sort((a, b) => b.min_quantity - a.min_quantity);
+                    let tieredPrices = productUnit.tiered_prices ? [...productUnit.tiered_prices].sort((a, b) => b.min_quantity - a.min_quantity) : [];
 
                     if (productUnit.enable_tiered_pricing && tieredPrices.length > 0) {
                         for (const tier of tieredPrices) {
@@ -867,7 +884,6 @@
                     };
                 },
 
-                // Enhanced update quantity with tiered pricing
                 async updateQuantity(itemId, newQuantity) {
                     const itemIndex = this.cart.findIndex(item => item.id === itemId);
                     if (itemIndex < 0) return;
@@ -911,6 +927,9 @@
                             return;
                         }
                 
+                        const oldTier = item.applied_tier?.min_quantity;
+                        const newTier = priceData.data.applied_tier?.min_quantity;
+
                         const updatedItem = {
                             ...item,
                             quantity: newQuantity,
@@ -922,10 +941,8 @@
                         this.cart.splice(itemIndex, 1, updatedItem);
                         this.saveCartToStorage();
                 
-                        if (priceData.data.applied_tier && priceData.data.base_price !== priceData.data.final_price) {
-                            this.showNotification('info',
-                                `Harga berubah ke tier: ${this.formatCurrency(priceData.data.final_price)}`
-                            );
+                        if (oldTier !== newTier && priceData.data.applied_tier) {
+                            this.showNotification('success', `Tier ${newTier} diterapkan! Hemat ${this.formatCurrency(priceData.data.discount_amount)}`);
                         }
                     } catch (error) {
                         console.error('Error updating quantity:', error);
@@ -933,13 +950,87 @@
                     }
                 },
 
-                // Show tiered pricing info
+                getTierProgress(item) {
+                    if (!item.enable_tiered_pricing || !item.tiered_prices || item.tiered_prices.length === 0) {
+                        return 0;
+                    }
+                    
+                    // Sort tiered prices by min_quantity
+                    const sortedTiers = [...item.tiered_prices].sort((a, b) => a.min_quantity - b.min_quantity);
+                    
+                    // Find current tier and next tier
+                    let currentTierIndex = -1;
+                    let nextTier = null;
+                    
+                    for (let i = 0; i < sortedTiers.length; i++) {
+                        if (item.quantity >= sortedTiers[i].min_quantity) {
+                            currentTierIndex = i;
+                        } else if (currentTierIndex >= 0 && !nextTier) {
+                            nextTier = sortedTiers[i];
+                            break;
+                        }
+                    }
+                    
+                    // If already at highest tier, return 100%
+                    if (currentTierIndex === sortedTiers.length - 1) {
+                        return 100;
+                    }
+                    
+                    // If no tier reached yet, calculate progress to first tier
+                    if (currentTierIndex === -1) {
+                        const firstTier = sortedTiers[0];
+                        return Math.min(100, (item.quantity / firstTier.min_quantity) * 100);
+                    }
+                    
+                    // Calculate progress to next tier
+                    const currentTier = sortedTiers[currentTierIndex];
+                    const progressRange = nextTier.min_quantity - currentTier.min_quantity;
+                    const currentProgress = item.quantity - currentTier.min_quantity;
+                    
+                    return Math.min(100, (currentProgress / progressRange) * 100);
+                },
+
+                getTierProgressText(item) {
+                    if (!item.enable_tiered_pricing || !item.tiered_prices || item.tiered_prices.length === 0) {
+                        return '';
+                    }
+                    
+                    // Sort tiered prices by min_quantity
+                    const sortedTiers = [...item.tiered_prices].sort((a, b) => a.min_quantity - b.min_quantity);
+                    
+                    // Find current tier and next tier
+                    let currentTierIndex = -1;
+                    let nextTier = null;
+                    
+                    for (let i = 0; i < sortedTiers.length; i++) {
+                        if (item.quantity >= sortedTiers[i].min_quantity) {
+                            currentTierIndex = i;
+                        } else if (currentTierIndex >= 0 && !nextTier) {
+                            nextTier = sortedTiers[i];
+                            break;
+                        }
+                    }
+                    
+                    // If already at highest tier
+                    if (currentTierIndex === sortedTiers.length - 1) {
+                        return `Tier maksimum (${sortedTiers[currentTierIndex].min_quantity}+ unit)`;
+                    }
+                    
+                    // If no tier reached yet
+                    if (currentTierIndex === -1) {
+                        const firstTier = sortedTiers[0];
+                        return `${item.quantity}/${firstTier.min_quantity} unit untuk tier pertama`;
+                    }
+                    
+                    // Show progress to next tier
+                    return `${item.quantity}/${nextTier.min_quantity} unit untuk tier berikutnya`;
+                },
+
                 showTieredPricingInfo(item) {
                     this.selectedTieredItem = item;
                     this.showTieredPricingModal = true;
                 },
 
-                // Search methods
                 async handleSearch() {
                     const query = this.searchQuery.trim().toLowerCase();
                     if (query.length < 2) {
@@ -949,22 +1040,18 @@
 
                     this.isSearching = true;
 
-                    // Check if it's a barcode (pure numbers, 8+ digits)
                     if (/^\d{8,}$/.test(query)) {
-                        // Search for barcode locally first
                         const localProduct = this.allProducts.find(p => p.barcode === query);
                         if (localProduct) {
                             await this.addToCart(localProduct, localProduct.product_units[0].unit_id, localProduct.product_units[0].price, localProduct.product_units[0].unit.symbol);
                             this.searchResults = [];
                         } else {
-                            // Fallback to server search if not found locally
                             await this.handleBarcodeSearch(query);
                         }
                     } else {
-                        // Perform local search for product name
                         this.searchResults = this.allProducts.filter(product => {
                             return product.name.toLowerCase().includes(query) || (product.barcode && product.barcode.includes(query));
-                        }).slice(0, 20); // Limit results for performance
+                        }).slice(0, 20);
                     }
 
                     this.isSearching = false;
@@ -998,7 +1085,6 @@
                     }
                 },
 
-                // Process transaction
                 async processTransaction() {
                     if (!this.canProcessTransaction) return;
 
@@ -1075,7 +1161,6 @@
                     }
                 },
 
-                // Generate transaction summary HTML
                 generateTransactionSummaryHTML() {
                     let itemsHTML = '';
                     let totalDiscount = 0;
@@ -1170,7 +1255,6 @@
                     `;
                 },
 
-                // Additional cost methods
                 addAdditionalCost() {
                     const description = this.newAdditionalCost.description === 'Lainnya' 
                         ? this.newAdditionalCost.customDescription 
@@ -1190,7 +1274,6 @@
                     this.additionalCosts.push(newCost);
                     this.saveAdditionalCostsToStorage();
 
-                    // Reset form
                     this.newAdditionalCost = {
                         description: '',
                         customDescription: '',
@@ -1211,7 +1294,6 @@
                     }
                 },
 
-                // Cart methods
                 removeFromCart(itemId) {
                     const item = this.cart.find(item => item.id === itemId);
                     this.cart = this.cart.filter(item => item.id !== itemId);
@@ -1240,7 +1322,6 @@
                     }
                 },
 
-                // Payment methods
                 setQuickAmount(amount) {
                     this.paidAmount = amount;
                 },
@@ -1251,7 +1332,6 @@
                     }
                 },
 
-                // Storage methods
                 saveCartToStorage() {
                     const cartData = this.cart.map(item => ({
                         ...item,
@@ -1271,7 +1351,6 @@
                     if (saved) {
                         try {
                             this.cart = JSON.parse(saved);
-                            // Ensure backward compatibility
                             this.cart = this.cart.map(item => ({
                                 ...item,
                                 base_price: item.base_price || item.price,
@@ -1317,7 +1396,6 @@
                     localStorage.removeItem('pos_additional_costs');
                 },
 
-                // UI Methods
                 focusSearch() {
                     this.$refs.searchInput?.focus();
                 },
@@ -1327,7 +1405,6 @@
                     this.showTieredPricingModal = false;
                 },
 
-                // Computed properties
                 get subtotal() {
                     return this.cart.reduce((sum, item) => sum + (item.quantity * item.price), 0);
                 },
@@ -1356,7 +1433,6 @@
                            !this.isProcessingTransaction;
                 },
 
-                // Utility methods
                 formatCurrency(amount) {
                     return new Intl.NumberFormat('id-ID', {
                         style: 'currency',

@@ -930,18 +930,18 @@
     }
 </style>
     <script>
-function enhancedPosSystem() {
+function posSystem() {
     return {
-        // ... (keep all existing properties from original POS)
+        // Core data
         cart: [],
         searchQuery: '',
         searchResults: [],
         paidAmount: 0,
         additionalCosts: [],
+        
+        // State flags
         isProcessingTransaction: false,
         isSearching: false,
-        currentTime: '',
-        currentDate: '',
         
         // Modal states
         showAddProductModal: false,
@@ -949,25 +949,9 @@ function enhancedPosSystem() {
         showAdditionalCostModal: false,
         showPriceEditPopup: false,
         showTieredPricingModal: false,
-        
-        // New properties for tiered pricing
-        tieredPricingData: {},
         selectedTieredItem: null,
         
-        // Edit states
-        editingItem: {},
-        editingItemId: null,
-        priceEditItemId: null,
-        priceEditValue: 0,
-        priceEditPosition: { x: 0, y: 0 },
-        
         // Form states
-        newProduct: {
-            name: '',
-            barcode: '',
-            price: 0,
-            unit: 'pcs'
-        },
         newAdditionalCost: {
             description: '',
             customDescription: '',
@@ -976,32 +960,24 @@ function enhancedPosSystem() {
         
         // Constants
         quickAmounts: [10000, 20000, 50000, 100000],
+        currentTime: '',
+        currentDate: '',
 
-        // Enhanced initialization
+        // ============= INITIALIZATION =============
         initializePOS() {
             this.loadCartFromStorage();
             this.loadAdditionalCostsFromStorage();
             this.updateDateTime();
             setInterval(() => this.updateDateTime(), 1000);
             
-            // Add route for API endpoints
-            if (!window.posRoutes) {
-                window.posRoutes = {
-                    search: '/api/pos/search-product',
-                    barcode: '/api/pos/product-by-barcode',
-                    calculate: '/api/pos/calculate-tiered-price',
-                    process: '/api/pos/process'
-                };
-            }
-            
-            // Keyboard shortcuts (keep existing ones)
+            // Keyboard shortcuts
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'F1') {
                     e.preventDefault();
                     this.focusSearch();
                 } else if (e.key === 'F2') {
                     e.preventDefault();
-                    this.$refs.paidAmountInput?.focus();
+                    document.querySelector('input[x-model="paidAmount"]')?.focus();
                 } else if (e.key === 'F3' && this.canProcessTransaction) {
                     e.preventDefault();
                     this.processTransaction();
@@ -1011,7 +987,7 @@ function enhancedPosSystem() {
             });
         },
 
-        // Enhanced add to cart with tiered pricing and purchase limits
+        // ============= CART MANAGEMENT =============
         async addToCart(product, unitId, unitPrice, unitSymbol) {
             try {
                 const productUnit = product.units.find(u => u.unit_id === unitId);
@@ -1020,6 +996,7 @@ function enhancedPosSystem() {
                     return;
                 }
 
+                // Check if item already exists in cart
                 const existingItemIndex = this.cart.findIndex(
                     (item) => item.product_id === product.id && item.unit_id === unitId
                 );
@@ -1029,7 +1006,7 @@ function enhancedPosSystem() {
                     quantity = this.cart[existingItemIndex].quantity + 1;
                 }
 
-                // Check purchase limits and calculate tiered price
+                // Validate and calculate tiered price
                 const priceData = await this.calculateTieredPrice(product.id, unitId, quantity);
                 
                 if (!priceData.success) {
@@ -1038,11 +1015,19 @@ function enhancedPosSystem() {
                 }
 
                 if (existingItemIndex >= 0) {
-                    // Update existing item with new tiered price
+                    // Update existing item
                     this.cart[existingItemIndex].quantity = quantity;
                     this.cart[existingItemIndex].price = priceData.data.final_price;
                     this.cart[existingItemIndex].applied_tier = priceData.data.applied_tier;
                     this.cart[existingItemIndex].discount_amount = priceData.data.discount_amount;
+                    this.cart[existingItemIndex].discount_percentage = priceData.data.discount_percentage;
+                    
+                    // Show tier change notification
+                    if (priceData.data.applied_tier) {
+                        this.showNotification('success', 
+                            `Tier berubah! Diskon ${priceData.data.discount_percentage}% diterapkan`
+                        );
+                    }
                 } else {
                     // Add new item
                     const newItem = {
@@ -1054,12 +1039,13 @@ function enhancedPosSystem() {
                         base_price: priceData.data.base_price,
                         price: priceData.data.final_price,
                         quantity: quantity,
-                        min_purchase: priceData.data.min_purchase,
-                        max_purchase: priceData.data.max_purchase,
-                        enable_tiered_pricing: productUnit.enable_tiered_pricing,
+                        min_purchase: priceData.data.min_purchase || 1,
+                        max_purchase: priceData.data.max_purchase || null,
+                        enable_tiered_pricing: productUnit.enable_tiered_pricing || false,
                         tiered_prices: productUnit.tiered_prices || [],
                         applied_tier: priceData.data.applied_tier,
-                        discount_amount: priceData.data.discount_amount,
+                        discount_amount: priceData.data.discount_amount || 0,
+                        discount_percentage: priceData.data.discount_percentage || 0,
                     };
                     this.cart.push(newItem);
                 }
@@ -1068,14 +1054,13 @@ function enhancedPosSystem() {
                 this.searchResults = [];
                 this.saveCartToStorage();
                 
-                // Show appropriate notification
-            }catch (error) {
+                this.showNotification('success', `${product.name} ditambahkan ke keranjang`);
+            } catch (error) {
                 console.error('Error adding to cart:', error);
-                this.showNotification('error', 'Terjadi kesalahan saat menambahkan produk ke keranjang');
+                this.showNotification('error', 'Terjadi kesalahan saat menambahkan produk');
             }
         },
 
-        // Enhanced update quantity with tiered pricing recalculation
         async updateQuantity(itemId, newQuantity) {
             if (newQuantity <= 0) {
                 this.removeFromCart(itemId);
@@ -1089,26 +1074,38 @@ function enhancedPosSystem() {
 
             try {
                 // Recalculate price with new quantity
-                const priceData = await this.calculateTieredPrice(item.product_id, item.unit_id, newQuantity);
+                const priceData = await this.calculateTieredPrice(
+                    item.product_id, 
+                    item.unit_id, 
+                    newQuantity
+                );
                 
                 if (!priceData.success) {
                     this.showNotification('warning', priceData.message);
                     return;
                 }
 
-                // Update item with new data
+                const oldTier = item.applied_tier?.min_quantity;
+                const newTier = priceData.data.applied_tier?.min_quantity;
+
+                // Update item
                 this.cart[itemIndex].quantity = newQuantity;
                 this.cart[itemIndex].price = priceData.data.final_price;
                 this.cart[itemIndex].applied_tier = priceData.data.applied_tier;
                 this.cart[itemIndex].discount_amount = priceData.data.discount_amount;
+                this.cart[itemIndex].discount_percentage = priceData.data.discount_percentage;
 
                 this.saveCartToStorage();
 
-                // Show tier change notification if applicable
-                if (priceData.data.applied_tier && priceData.data.base_price !== priceData.data.final_price) {
-                    this.showNotification('info', 
-                        `Harga berubah ke tier: ${this.formatCurrency(priceData.data.final_price)} (diskon ${priceData.data.discount_percentage}%)`
-                    );
+                // Show notification if tier changed
+                if (oldTier !== newTier) {
+                    if (newTier) {
+                        this.showNotification('success', 
+                            `🎉 Tier berubah! Hemat ${this.formatCurrency(priceData.data.discount_amount)}`
+                        );
+                    } else if (oldTier && !newTier) {
+                        this.showNotification('info', 'Tier dihapus - kuantitas di bawah minimum');
+                    }
                 }
             } catch (error) {
                 console.error('Error updating quantity:', error);
@@ -1116,7 +1113,37 @@ function enhancedPosSystem() {
             }
         },
 
-        // New method: Calculate tiered price
+        removeFromCart(itemId) {
+            const item = this.cart.find(i => i.id === itemId);
+            this.cart = this.cart.filter(i => i.id !== itemId);
+            this.saveCartToStorage();
+            
+            if (item) {
+                this.showNotification('info', `${item.name} dihapus dari keranjang`);
+            }
+        },
+
+        async clearCart() {
+            const result = await Swal.fire({
+                title: 'Kosongkan Keranjang?',
+                text: "Semua item akan dihapus dari keranjang",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Kosongkan',
+                cancelButtonText: 'Batal'
+            });
+
+            if (result.isConfirmed) {
+                this.cart = [];
+                this.paidAmount = 0;
+                this.clearStorage();
+                this.showNotification('success', 'Keranjang dikosongkan');
+            }
+        },
+
+        // ============= TIERED PRICING CALCULATION =============
         async calculateTieredPrice(productId, unitId, quantity) {
             try {
                 const response = await fetch('/api/pos/calculate-tiered-price', {
@@ -1133,6 +1160,10 @@ function enhancedPosSystem() {
                     })
                 });
 
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const data = await response.json();
                 return data;
             } catch (error) {
@@ -1144,37 +1175,81 @@ function enhancedPosSystem() {
             }
         },
 
-        // New method: Show tiered pricing info
-        showTieredPricingInfo(item) {
-            this.selectedTieredItem = item;
-            this.showTieredPricingModal = true;
-        },
+        // ============= SEARCH FUNCTIONALITY =============
+        async handleSearch() {
+            if (this.searchQuery.length < 2) {
+                this.searchResults = [];
+                return;
+            }
 
-        // Enhanced search with tiered pricing data
-        async performProductSearch(query) {
-            const response = await fetch(`/api/pos/search-product?query=${encodeURIComponent(query)}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': this.getCSRFToken(),
-                    'Accept': 'application/json'
+            this.isSearching = true;
+
+            try {
+                // Check if it's a barcode (8+ digits)
+                if (/^\d{8,}$/.test(this.searchQuery)) {
+                    await this.handleBarcodeSearch(this.searchQuery);
+                } else {
+                    await this.performProductSearch(this.searchQuery);
                 }
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            } catch (error) {
+                console.error('Search error:', error);
+                this.showNotification('error', 'Terjadi kesalahan saat mencari produk');
+            } finally {
+                this.isSearching = false;
             }
-
-            const data = await response.json();
-            
-            if (data.error) {
-                throw new Error(data.message || 'Terjadi kesalahan saat mencari produk');
-            }
-
-            this.searchResults = Array.isArray(data) ? data : [];
         },
 
-        // Enhanced process transaction with tiered pricing
+        async handleBarcodeSearch(barcode) {
+            try {
+                const response = await fetch(`/api/pos/product-by-barcode?barcode=${encodeURIComponent(barcode)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': this.getCSRFToken(),
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.product) {
+                    const product = data.product;
+                    if (product.units && product.units.length > 0) {
+                        const firstUnit = product.units[0];
+                        await this.addToCart(product, firstUnit.unit_id, firstUnit.price, firstUnit.unit_symbol);
+                    }
+                } else {
+                    await this.performProductSearch(barcode);
+                }
+            } catch (error) {
+                await this.performProductSearch(barcode);
+            }
+        },
+
+        async performProductSearch(query) {
+            try {
+                const response = await fetch(`/api/pos/search-product?query=${encodeURIComponent(query)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': this.getCSRFToken(),
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                this.searchResults = Array.isArray(data) ? data : [];
+            } catch (error) {
+                console.error('Search error:', error);
+                this.searchResults = [];
+            }
+        },
+
+        // ============= TRANSACTION PROCESSING =============
         async processTransaction() {
             if (!this.canProcessTransaction) return;
 
@@ -1209,7 +1284,7 @@ function enhancedPosSystem() {
                             product_id: item.product_id,
                             unit_id: item.unit_id,
                             quantity: item.quantity,
-                            unit_price: item.price // Send final tiered price
+                            unit_price: item.price
                         })),
                         paid_amount: this.paidAmount,
                         additional_charges: this.additionalCosts.map(cost => ({
@@ -1222,7 +1297,6 @@ function enhancedPosSystem() {
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    // Show success dialog with transaction details
                     await Swal.fire({
                         icon: "success",
                         title: "Transaksi Berhasil!",
@@ -1239,21 +1313,18 @@ function enhancedPosSystem() {
                         }
                     });
 
-                    // Clear transaction data
                     this.clearTransactionData();
                 } else {
-                    const errorMessage = data.message || 'Terjadi kesalahan tidak terduga.';
-                    this.showNotification('error', errorMessage);
+                    this.showNotification('error', data.message || 'Terjadi kesalahan');
                 }
             } catch (error) {
                 console.error("Transaction error:", error);
-                this.showNotification('error', "Terjadi kesalahan saat memproses transaksi: " + error.message);
+                this.showNotification('error', "Terjadi kesalahan saat memproses transaksi");
             } finally {
                 this.isProcessingTransaction = false;
             }
         },
 
-        // Generate transaction summary HTML with tiered pricing info
         generateTransactionSummaryHTML() {
             let itemsHTML = '';
             let totalDiscount = 0;
@@ -1271,7 +1342,7 @@ function enhancedPosSystem() {
                         <div class="text-right">
                             <div>${this.formatCurrency(item.price * item.quantity)}</div>
                             ${item.applied_tier ? 
-                                `<div class="text-xs text-green-600">Tier: ≥${item.applied_tier.min_quantity}</div>` 
+                                `<div class="text-xs text-orange-600">Tier: ≥${item.applied_tier.min_quantity} unit</div>` 
                                 : ''
                             }
                             ${itemDiscount > 0 ? 
@@ -1293,33 +1364,34 @@ function enhancedPosSystem() {
                             <span>${this.formatCurrency(this.subtotal)}</span>
                         </div>
                         ${totalDiscount > 0 ? `
-                        <div class="flex justify-between text-green-600">
-                            <span>Total Hemat:</span>
+                        <div class="flex justify-between text-green-600 font-medium">
+                            <span>Total Hemat (Tier):</span>
                             <span>${this.formatCurrency(totalDiscount)}</span>
                         </div>
                         ` : ''}
+                        ${this.totalAdditionalCosts !== 0 ? `
                         <div class="flex justify-between">
                             <span>Biaya Tambahan:</span>
                             <span>${this.formatCurrency(this.totalAdditionalCosts)}</span>
                         </div>
-                        <div class="flex justify-between border-t pt-2">
-                            <span class="font-medium">Total:</span>
-                            <span class="font-bold text-blue-600">${this.formatCurrency(this.totalAmount)}</span>
+                        ` : ''}
+                        <div class="flex justify-between border-t pt-2 font-bold">
+                            <span>Total:</span>
+                            <span class="text-blue-600">${this.formatCurrency(this.totalAmount)}</span>
                         </div>
                         <div class="flex justify-between">
                             <span>Dibayar:</span>
                             <span>${this.formatCurrency(this.paidAmount)}</span>
                         </div>
-                        <div class="flex justify-between border-t pt-2">
+                        <div class="flex justify-between border-t pt-2 font-bold">
                             <span>Kembalian:</span>
-                            <span class="font-bold text-green-600">${this.formatCurrency(this.changeAmount)}</span>
+                            <span class="text-green-600">${this.formatCurrency(this.changeAmount)}</span>
                         </div>
                     </div>
                 </div>
             `;
         },
 
-        // Generate success transaction HTML
         generateSuccessTransactionHTML(transaction) {
             return `
                 <div class="text-left bg-green-50 p-4 rounded-lg">
@@ -1336,10 +1408,6 @@ function enhancedPosSystem() {
                             <span>Dibayar:</span>
                             <span>${this.formatCurrency(transaction.paid_amount)}</span>
                         </div>
-                        <div class="flex justify-between">
-                            <span>Biaya Tambahan:</span>
-                            <span>${this.formatCurrency(transaction.tax_amount)}</span>
-                        </div>
                         <div class="flex justify-between border-t pt-2">
                             <span>Kembalian:</span>
                             <span class="font-bold text-green-600">${this.formatCurrency(transaction.change_amount)}</span>
@@ -1349,77 +1417,98 @@ function enhancedPosSystem() {
             `;
         },
 
-        // Enhanced cart storage to include tiered pricing data
-        saveCartToStorage() {
-            const cartData = this.cart.map(item => ({
-                ...item,
-                // Ensure all tiered pricing data is saved
-                base_price: item.base_price,
-                applied_tier: item.applied_tier,
-                discount_amount: item.discount_amount,
-                min_purchase: item.min_purchase,
-                max_purchase: item.max_purchase,
-                enable_tiered_pricing: item.enable_tiered_pricing,
-                tiered_prices: item.tiered_prices
-            }));
-            localStorage.setItem('pos_cart', JSON.stringify(cartData));
+        // ============= ADDITIONAL COSTS =============
+        addAdditionalCost() {
+            const description = this.newAdditionalCost.description === 'Lainnya' 
+                ? this.newAdditionalCost.customDescription 
+                : this.newAdditionalCost.description;
+
+            if (!description || this.newAdditionalCost.amount <= 0) {
+                this.showNotification('warning', 'Mohon isi deskripsi dan jumlah dengan benar');
+                return;
+            }
+
+            const newCost = {
+                id: Date.now() + Math.random(),
+                description: description,
+                amount: this.newAdditionalCost.amount
+            };
+
+            this.additionalCosts.push(newCost);
+            this.saveAdditionalCostsToStorage();
+
+            this.newAdditionalCost = {
+                description: '',
+                customDescription: '',
+                amount: 0
+            };
+
+            this.showAdditionalCostModal = false;
+            this.showNotification('success', `${description} berhasil ditambahkan`);
         },
 
-        // Enhanced cart loading
+        removeAdditionalCost(costId) {
+            const cost = this.additionalCosts.find(c => c.id === costId);
+            this.additionalCosts = this.additionalCosts.filter(c => c.id !== costId);
+            this.saveAdditionalCostsToStorage();
+            
+            if (cost) {
+                this.showNotification('info', `${cost.description} dihapus`);
+            }
+        },
+
+        // ============= STORAGE MANAGEMENT =============
+        saveCartToStorage() {
+            localStorage.setItem('pos_cart', JSON.stringify(this.cart));
+        },
+
         loadCartFromStorage() {
             const saved = localStorage.getItem('pos_cart');
             if (saved) {
                 try {
                     this.cart = JSON.parse(saved);
-                    // Ensure backward compatibility
-                    this.cart = this.cart.map(item => ({
-                        ...item,
-                        base_price: item.base_price || item.price,
-                        applied_tier: item.applied_tier || null,
-                        discount_amount: item.discount_amount || 0,
-                        min_purchase: item.min_purchase || 1,
-                        max_purchase: item.max_purchase || null,
-                        enable_tiered_pricing: item.enable_tiered_pricing || false,
-                        tiered_prices: item.tiered_prices || []
-                    }));
                 } catch (error) {
-                    console.error('Error loading cart from storage:', error);
+                    console.error('Error loading cart:', error);
                     this.cart = [];
                 }
             }
         },
 
-        // New method: Get available tiers for quantity
-        getAvailableTiers(item, quantity) {
-            if (!item.enable_tiered_pricing || !item.tiered_prices) {
-                return [];
-            }
-
-            return item.tiered_prices.filter(tier => quantity >= tier.min_quantity)
-                .sort((a, b) => b.min_quantity - a.min_quantity);
+        saveAdditionalCostsToStorage() {
+            localStorage.setItem('pos_additional_costs', JSON.stringify(this.additionalCosts));
         },
 
-        // New method: Get tier info for display
-        getTierDisplayInfo(item) {
-            if (!item.applied_tier) {
-                return null;
+        loadAdditionalCostsFromStorage() {
+            const saved = localStorage.getItem('pos_additional_costs');
+            if (saved) {
+                this.additionalCosts = JSON.parse(saved);
             }
-
-            const savings = item.discount_amount || 0;
-            const percentage = item.base_price > 0 ? Math.round((savings / (item.base_price * item.quantity)) * 100) : 0;
-            
-            return {
-                tier: item.applied_tier,
-                savings: savings,
-                percentage: percentage,
-                description: item.applied_tier.description || `Tier ≥${item.applied_tier.min_quantity}`
-            };
         },
 
-        // All other existing methods remain the same...
-        // (keep all the existing methods from the original POS system)
+        clearStorage() {
+            localStorage.removeItem('pos_cart');
+            localStorage.removeItem('pos_additional_costs');
+        },
 
-        // Computed properties (enhanced)
+        clearTransactionData() {
+            this.cart = [];
+            this.additionalCosts = [];
+            this.paidAmount = 0;
+            this.clearStorage();
+        },
+
+        // ============= PAYMENT METHODS =============
+        setQuickAmount(amount) {
+            this.paidAmount = amount;
+        },
+
+        setExactAmount() {
+            if (this.totalAmount > 0) {
+                this.paidAmount = this.totalAmount;
+            }
+        },
+
+        // ============= COMPUTED PROPERTIES =============
         get subtotal() {
             return this.cart.reduce((sum, item) => sum + (item.quantity * item.price), 0);
         },
@@ -1448,26 +1537,23 @@ function enhancedPosSystem() {
                    !this.isProcessingTransaction;
         },
 
-        // Utility methods (keep existing ones and add new ones)
+        // ============= UTILITY METHODS =============
         updateDateTime() {
             const now = new Date();
-            const timeOptions = {
+            this.currentTime = now.toLocaleTimeString('id-ID', {
                 timeZone: 'Asia/Jakarta',
                 hour12: false,
                 hour: '2-digit',
                 minute: '2-digit',
                 second: '2-digit'
-            };
-            const dateOptions = {
+            });
+            this.currentDate = now.toLocaleDateString('id-ID', {
                 timeZone: 'Asia/Jakarta',
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
-            };
-            
-            this.currentTime = now.toLocaleTimeString('id-ID', timeOptions);
-            this.currentDate = now.toLocaleDateString('id-ID', dateOptions);
+            });
         },
 
         formatCurrency(amount) {
@@ -1482,163 +1568,8 @@ function enhancedPosSystem() {
             return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
         },
 
-        clearTransactionData() {
-            this.cart = [];
-            this.additionalCosts = [];
-            this.paidAmount = 0;
-            this.clearStorage();
-        },
-
-        clearStorage() {
-            localStorage.removeItem('pos_cart');
-            localStorage.removeItem('pos_additional_costs');
-        },
-
-        // Search methods (keep existing)
-        async handleSearch() {
-            if (this.searchQuery.length < 2) {
-                this.searchResults = [];
-                return;
-            }
-
-            this.isSearching = true;
-
-            try {
-                if (/^\d{8,}$/.test(this.searchQuery)) {
-                    await this.handleBarcodeSearch(this.searchQuery);
-                } else {
-                    await this.performProductSearch(this.searchQuery);
-                }
-            } catch (error) {
-                console.error('Search error:', error);
-                this.showNotification('error', 'Terjadi kesalahan saat mencari produk');
-            } finally {
-                this.isSearching = false;
-            }
-        },
-
-        async handleBarcodeSearch(barcode) {
-            try {
-                const response = await fetch(`/api/pos/product-by-barcode?barcode=${encodeURIComponent(barcode)}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': this.getCSRFToken(),
-                        'Accept': 'application/json'
-                    }
-                });
-
-                const data = await response.json();
-
-                if (data.success && data.product) {
-                    const product = data.product;
-                    if (product.units && product.units.length > 0) {
-                        const firstUnit = product.units[0];
-                        this.addToCart(product, firstUnit.unit_id, firstUnit.price, firstUnit.unit_symbol);
-                    }
-                } else {
-                    await this.performProductSearch(barcode);
-                }
-            } catch (error) {
-                await this.performProductSearch(barcode);
-            }
-        },
-
-        // Additional cost methods (keep existing)
-        addAdditionalCost() {
-            const description = this.newAdditionalCost.description === 'Lainnya' 
-                ? this.newAdditionalCost.customDescription 
-                : this.newAdditionalCost.description;
-
-            if (!description || this.newAdditionalCost.amount <= 0) {
-                this.showNotification('warning', 'Mohon isi deskripsi dan jumlah dengan benar');
-                return;
-            }
-
-            const newCost = {
-                id: Date.now() + Math.random(),
-                description: description,
-                amount: this.newAdditionalCost.amount
-            };
-
-            this.additionalCosts.push(newCost);
-            this.saveAdditionalCostsToStorage();
-
-            // Reset form
-            this.newAdditionalCost = {
-                description: '',
-                customDescription: '',
-                amount: 0
-            };
-
-            this.showAdditionalCostModal = false;
-            this.showNotification('success', `${description} berhasil ditambahkan`);
-        },
-
-        removeAdditionalCost(costId) {
-            const cost = this.additionalCosts.find(c => c.id === costId);
-            this.additionalCosts = this.additionalCosts.filter(c => c.id !== costId);
-            this.saveAdditionalCostsToStorage();
-            
-            if (cost) {
-                this.showNotification('info', `${cost.description} dihapus`);
-            }
-        },
-
-        saveAdditionalCostsToStorage() {
-            localStorage.setItem('pos_additional_costs', JSON.stringify(this.additionalCosts));
-        },
-
-        loadAdditionalCostsFromStorage() {
-            const saved = localStorage.getItem('pos_additional_costs');
-            if (saved) {
-                this.additionalCosts = JSON.parse(saved);
-            }
-        },
-
-        // Cart methods (existing ones)
-        removeFromCart(itemId) {
-            const item = this.cart.find(item => item.id === itemId);
-            this.cart = this.cart.filter(item => item.id !== itemId);
-            this.saveCartToStorage();
-            
-            if (item) {
-                this.showNotification('info', `${item.name} dihapus dari keranjang`);
-            }
-        },
-
-        async clearCart() {
-            const result = await Swal.fire({
-                title: 'Kosongkan Keranjang?',
-                text: "Semua item akan dihapus dari keranjang",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Ya, Kosongkan',
-                cancelButtonText: 'Batal'
-            });
-
-            if (result.isConfirmed) {
-                this.clearTransactionData();
-                this.showNotification('success', 'Keranjang dikosongkan');
-            }
-        },
-
-        // Payment methods (keep existing)
-        setQuickAmount(amount) {
-            this.paidAmount = amount;
-        },
-
-        setExactAmount() {
-            if (this.totalAmount > 0) {
-                this.paidAmount = this.totalAmount;
-            }
-        },
-
-        // UI Methods (keep existing)
         focusSearch() {
-            this.$refs.searchInput?.focus();
+            document.querySelector('input[x-model="searchQuery"]')?.focus();
         },
 
         closeAllModals() {
@@ -1657,8 +1588,8 @@ function enhancedPosSystem() {
                 timer: 3000,
                 timerProgressBar: true,
                 didOpen: (toast) => {
-                    toast.addEventListener('mouseenter', Swal.stopTimer)
-                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
                 }
             });
 
