@@ -8,201 +8,364 @@ use App\Models\Stock;
 use App\Models\Category;
 use App\Models\Unit;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class ProductSeeder extends Seeder
 {
     public function run(): void
     {
-        $gramUnit = Unit::where('symbol', 'g')->first();
-        $kgUnit = Unit::where('symbol', 'kg')->first();
-        $pcsUnit = Unit::where('symbol', 'pcs')->first();
-        $packUnit = Unit::where('symbol', 'pack')->first();
-        $literUnit = Unit::where('symbol', 'l')->first();
-        $mlUnit = Unit::where('symbol', 'ml')->first();
-        $sachUnit = Unit::where('symbol', 'sct')->first();
+        // 1. Inisialisasi Unit Dasar
+        $pcsUnit = Unit::firstOrCreate(['symbol' => 'pcs'], ['name' => 'Pieces']);
+        $sachUnit = Unit::firstOrCreate(['symbol' => 'sct'], ['name' => 'Sachet']);
+        $kgUnit = Unit::firstOrCreate(['symbol' => 'kg'], ['name' => 'Kilogram']);
+        $gramUnit = Unit::firstOrCreate(['symbol' => 'g'], ['name' => 'Gram']);
+        $mlUnit = Unit::firstOrCreate(['symbol' => 'ml'], ['name' => 'Mililiter']);
 
-        $sembakoCategory = Category::where('name', 'Sembako')->first();
-        $makminCategory = Category::where('name', 'Makanan & Minuman')->first();
-        $snackCategory = Category::where('name', 'Snack & Permen')->first();
+        // 2. Data Lengkap 294 Produk dari CSV 
+        $productsData = [
+            ['code' => 'RAK-D0101', 'name' => 'Soklin Deterjen Bubuk 720g', 'category' => 'Sabun cuci', 'price' => 20000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0102', 'name' => 'Daia Deterjen Bubuk 720g', 'category' => 'Sabun cuci', 'price' => 20000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0103', 'name' => 'Soklin Deterjen Bubuk 455g', 'category' => 'Sabun cuci', 'price' => 10000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0104', 'name' => 'Daia Deterjen Bubuk 455g', 'category' => 'Sabun cuci', 'price' => 10000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0105', 'name' => 'Soklin Deterjen Bubuk 245g', 'category' => 'Sabun cuci', 'price' => 10000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0106', 'name' => 'Daia Deterjen Bubuk 245g', 'category' => 'Sabun cuci', 'price' => 5000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0107', 'name' => 'Rinso Deterjen Bubuk 245g', 'category' => 'Sabun cuci', 'price' => 5000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0108', 'name' => 'Soklin Deterjen Bubuk 46g', 'category' => 'Sabun cuci', 'price' => 1000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0109', 'name' => 'Daia Deterjen Bubuk 46g', 'category' => 'Sabun cuci', 'price' => 1000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0110', 'name' => 'Rinso Deterjen Bubuk 46g', 'category' => 'Sabun cuci', 'price' => 1000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0111', 'name' => 'Sayang Deterjen Bubuk 260g', 'category' => 'Sabun cuci', 'price' => 5000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0112', 'name' => 'Smart Deterjen Bubuk 1.6kg', 'category' => 'Sabun cuci', 'price' => 22000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0113', 'name' => 'Gentle Gen Deterjen Cair 80ml', 'category' => 'Sabun cuci', 'price' => 1000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0114', 'name' => 'Garam Asam Bubuk 50g', 'category' => 'Sabun cuci', 'price' => 2500, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0201', 'name' => 'Autan Lotion Anti Nyamuk 12ml', 'category' => 'Obat Nyamuk', 'price' => 500, 'unit' => 'sct'],
+            ['code' => 'RAK-D0202', 'name' => 'Sofel Lotion Anti Nyamuk 13ml', 'category' => 'Obat Nyamuk', 'price' => 500, 'unit' => 'sct'],
+            ['code' => 'RAK-D0203', 'name' => 'Sosol Deterjen Cair 80ml', 'category' => 'Sabun cuci', 'price' => 1000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0204', 'name' => 'Soklin Deterjen Cair 20ml', 'category' => 'Sabun cuci', 'price' => 500, 'unit' => 'sct'],
+            ['code' => 'RAK-D0205', 'name' => 'Rinso Deterjen Cair 20ml', 'category' => 'Sabun cuci', 'price' => 500, 'unit' => 'sct'],
+            ['code' => 'RAK-D0206', 'name' => 'Downy Pewangi Pakaian 8ml', 'category' => 'Pewangi', 'price' => 500, 'unit' => 'sct'],
+            ['code' => 'RAK-D0207', 'name' => 'Molto Pewangi Pakaian 11ml', 'category' => 'Pewangi', 'price' => 500, 'unit' => 'sct'],
+            ['code' => 'RAK-D0208', 'name' => 'Royale Pewangi Pakaian 13ml', 'category' => 'Pewangi', 'price' => 500, 'unit' => 'sct'],
+            ['code' => 'RAK-D0209', 'name' => 'Soklin Softener 13ml', 'category' => 'Pewangi', 'price' => 500, 'unit' => 'sct'],
+            ['code' => 'RAK-D0210', 'name' => 'Pantene Sampo Sachet 9ml', 'category' => 'Sampo', 'price' => 1000, 'unit' => 'sct'],
+            ['code' => 'RAK-D0211', 'name' => 'Dove Sampo Sachet 8ml', 'category' => 'Sampo', 'price' => 1000, 'unit' => 'sct'],
+            ['code' => 'RAK-D0212', 'name' => 'Rejoice Sampo Sachet 10ml', 'category' => 'Sampo', 'price' => 1000, 'unit' => 'sct'],
+            ['code' => 'RAK-D0213', 'name' => 'Clear Sampo Sachet 10ml', 'category' => 'Sampo', 'price' => 1000, 'unit' => 'sct'],
+            ['code' => 'RAK-D0214', 'name' => 'Emeron Sampo Sachet 11ml', 'category' => 'Sampo', 'price' => 500, 'unit' => 'sct'],
+            ['code' => 'RAK-D0215', 'name' => 'Sunsilk Sampo Sachet 12ml', 'category' => 'Sampo', 'price' => 1000, 'unit' => 'sct'],
+            ['code' => 'RAK-D0216', 'name' => 'Zinc Sampo Sachet 13ml', 'category' => 'Sampo', 'price' => 500, 'unit' => 'sct'],
+            ['code' => 'RAK-D0217', 'name' => 'Lifebuoy Sampo Sachet 14ml', 'category' => 'Sampo', 'price' => 500, 'unit' => 'sct'],
+            ['code' => 'RAK-D0301', 'name' => 'Shinzui Sabun Batang 80g', 'category' => 'Sabun Mandi', 'price' => 4000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0302', 'name' => 'Lervia Sabun Batang 90g', 'category' => 'Sabun Mandi', 'price' => 4000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0303', 'name' => 'Sehat Sabun Batang 65g', 'category' => 'Sabun Mandi', 'price' => 3000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0304', 'name' => 'Asepso Sabun Batang 80g', 'category' => 'Sabun Mandi', 'price' => 6000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0305', 'name' => 'Harmony Sabun Batang 70g', 'category' => 'Sabun Mandi', 'price' => 2500, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0306', 'name' => 'Ayu Sabun Batang 65g', 'category' => 'Sabun Mandi', 'price' => 2500, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0307', 'name' => 'Nuvo Sabun Batang 72g', 'category' => 'Sabun Mandi', 'price' => 3000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0308', 'name' => 'Medicare Sabun Batang 73g', 'category' => 'Sabun Mandi', 'price' => 3000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0309', 'name' => 'Zwitsal Sabun Batang 74g', 'category' => 'Sabun Mandi', 'price' => 5000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0310', 'name' => 'Citra Sabun Batang 75g', 'category' => 'Sabun Mandi', 'price' => 3500, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0311', 'name' => 'My Baby Sabun Batang 76g', 'category' => 'Sabun Mandi', 'price' => 6000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0312', 'name' => 'Lifebuoy Sabun Batang 77g', 'category' => 'Sabun Mandi', 'price' => 4000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0313', 'name' => 'Cussons Baby Sabun Batang 78g', 'category' => 'Sabun Mandi', 'price' => 6000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0314', 'name' => 'Lux Sabun Batang 79g', 'category' => 'Sabun Mandi', 'price' => 4000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0315', 'name' => 'Zen Sabun Batang 80g', 'category' => 'Sabun Mandi', 'price' => 5000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0316', 'name' => 'Pepaya Sabun Batang 81g', 'category' => 'Sabun Mandi', 'price' => 7500, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0317', 'name' => 'Marina Sabun Batang 82g', 'category' => 'Sabun Mandi', 'price' => 3500, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0318', 'name' => 'Pepsodent Pasta Gigi 25g', 'category' => 'Odol', 'price' => 2500, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0319', 'name' => 'Pepsodent Pasta Gigi 120g', 'category' => 'Odol', 'price' => 10000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0320', 'name' => 'Pepsodent Pasta Gigi 75g', 'category' => 'Odol', 'price' => 6000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0321', 'name' => 'Pepsodent Pasta Gigi 2x190g', 'category' => 'Odol', 'price' => 23500, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0322', 'name' => 'Pepsodent Herbal 100g', 'category' => 'Odol', 'price' => 11000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0323', 'name' => 'Pepsodent Biru 75g', 'category' => 'Odol', 'price' => 5000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0324', 'name' => 'Ciptadent Pasta Gigi 75g', 'category' => 'Odol', 'price' => 6000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0325', 'name' => 'Ciptadent Pasta Gigi 190g', 'category' => 'Odol', 'price' => 12000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0326', 'name' => 'Barakat Pasta Gigi 75g', 'category' => 'Odol', 'price' => 6000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0327', 'name' => 'Kodomo Pasta Gigi 45g', 'category' => 'Odol', 'price' => 8000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0328', 'name' => 'Close Up Pasta Gigi 160g', 'category' => 'Odol', 'price' => 11000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0329', 'name' => 'Barakat Pasta Gigi 190g', 'category' => 'Odol', 'price' => 13000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0330', 'name' => 'Close Up Pasta Gigi 110g', 'category' => 'Odol', 'price' => 15000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0331', 'name' => 'Cussons Kids Pasta Gigi 45g', 'category' => 'Odol', 'price' => 7000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0332', 'name' => 'Kodomo Sikat Gigi', 'category' => 'Sikat Gigi', 'price' => 3500, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0333', 'name' => 'Oral B Sikat Gigi', 'category' => 'Sikat Gigi', 'price' => 3500, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0334', 'name' => 'Formula Sikat Gigi', 'category' => 'Sikat Gigi', 'price' => 3500, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0335', 'name' => 'Pepsodent Sikat Gigi', 'category' => 'Sikat Gigi', 'price' => 3500, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0336', 'name' => 'Ponds Pelembab Wajah 10g/ml', 'category' => 'Perawatan Tubuh', 'price' => 4500, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0337', 'name' => 'Ponds Cuci Muka 10g/ml', 'category' => 'Perawatan Tubuh', 'price' => 4500, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0338', 'name' => 'Lovely Pelembab Wajah 10g/ml', 'category' => 'Perawatan Tubuh', 'price' => 4500, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0339', 'name' => 'Lovely Sabun Batang 80g', 'category' => 'Perawatan Tubuh', 'price' => 3500, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0340', 'name' => 'Garnier Cuci Muka Kuning 10g/ml', 'category' => 'Perawatan Tubuh', 'price' => 4500, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0341', 'name' => 'Garnier Cuci Muka Pink 10g/ml', 'category' => 'Perawatan Tubuh', 'price' => 4500, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0342', 'name' => 'Rexona Deodoran Wanita 10ml/g', 'category' => 'Perawatan Tubuh', 'price' => 2500, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0343', 'name' => 'Rexona Deodoran Pria 10ml/g', 'category' => 'Perawatan Tubuh', 'price' => 2500, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0401', 'name' => 'Moko Moko Popok Bayi Pcs/Sachet', 'category' => 'Popok Bayi', 'price' => 4000, 'unit' => 'sct'],
+            ['code' => 'RAK-D0402', 'name' => 'Merries Popok Bayi Pcs/Sachet', 'category' => 'Popok Bayi', 'price' => 6000, 'unit' => 'sct'],
+            ['code' => 'RAK-D0403', 'name' => 'Mama Mia Popok Bayi Pcs/Sachet', 'category' => 'Popok Bayi', 'price' => 4000, 'unit' => 'sct'],
+            ['code' => 'RAK-D0404', 'name' => 'Beby Happy Popok Bayi Pcs/Sachet', 'category' => 'Popok Bayi', 'price' => 2000, 'unit' => 'sct'],
+            ['code' => 'RAK-D0405', 'name' => 'CHARM SAFE NIGHT 29CM 96/48', 'category' => 'Pembalut', 'price' => 9250, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0406', 'name' => 'CHARM SAFE NIGHT 35CM 12S/24', 'category' => 'Pembalut', 'price' => 16250, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0407', 'name' => 'CHARM SAFE NIGHT 29CM 56S/24', 'category' => 'Pembalut', 'price' => 9000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0408', 'name' => 'CHARM BF-EXT MX 20/24', 'category' => 'Pembalut', 'price' => 12900, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0409', 'name' => 'CHARM SAFE NIGHT 29CM 18S/24', 'category' => 'Pembalut', 'price' => 15750, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0410', 'name' => 'CHARM BF-EXT MX 23/24', 'category' => 'Pembalut', 'price' => 13800, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0411', 'name' => 'CHARM BF-EXT MW 28/24', 'category' => 'Pembalut', 'price' => 20750, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0412', 'name' => 'CHARM BF-EXT MX 30/48', 'category' => 'Pembalut', 'price' => 29500, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0413', 'name' => 'CHARM BF-EXT MW 40/48', 'category' => 'Pembalut', 'price' => 7750, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0414', 'name' => 'CHARM COOLING FRESH MW 29CM 10', 'category' => 'Pembalut', 'price' => 16000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0415', 'name' => 'CHARM COOLING FRESH MW 2CM 12', 'category' => 'Pembalut', 'price' => 38000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0416', 'name' => 'CHARM COOLING FRESH WL 28CM 13', 'category' => 'Pembalut', 'price' => 16750, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0417', 'name' => 'CHARM BF-EXT MW 20/24', 'category' => 'Pembalut', 'price' => 15000, 'unit' => 'pcs'],
+            ['code' => 'RAK-D0418', 'name' => 'CHARM HERBAL 26CR WINGS 14S/24', 'category' => 'Pembalut', 'price' => 16000, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0301', 'name' => 'Pewarna makanan Alco', 'category' => 'Kue', 'price' => 2000, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0302', 'name' => 'Morison ', 'category' => 'Kue', 'price' => 7000, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0303', 'name' => 'Soda kue', 'category' => 'Kue', 'price' => 2500, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0304', 'name' => 'Metega', 'category' => 'Kue', 'price' => 3500, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0305', 'name' => 'Sp', 'category' => 'Kue', 'price' => 2500, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0306', 'name' => 'Jelly lucky ball', 'category' => 'Kue', 'price' => 9000, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0307', 'name' => 'Ovalet', 'category' => 'Kue', 'price' => 2500, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0308', 'name' => 'Vanili cap dali botol', 'category' => 'Kue', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0309', 'name' => 'Baking powdercap dali botol', 'category' => 'Kue', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0310', 'name' => 'Ragi ', 'category' => 'Kue', 'price' => 11500, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0311', 'name' => 'Tepung Beras 500g', 'category' => 'Kue', 'price' => 7500, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0312', 'name' => 'Tepung ketan 500g', 'category' => 'Kue', 'price' => 11500, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0401', 'name' => 'Obat Nyamuk Sapi Kuning', 'category' => 'Obat Nyamuk', 'price' => 4500, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0402', 'name' => 'Obat Nyamuk Sapi hitam', 'category' => 'Obat Nyamuk', 'price' => 5000, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0403', 'name' => 'Obat Nyamuk Vape', 'category' => 'Obat Nyamuk', 'price' => 4500, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0404', 'name' => 'Obat nyamuk Kingkong', 'category' => 'Obat Nyamuk', 'price' => 5000, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0405', 'name' => 'Obat Nyamuk Bakar Baygon ', 'category' => 'Obat Nyamuk', 'price' => 5000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0501', 'name' => '286', 'category' => 'Rokok', 'price' => 9000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0502', 'name' => '234 Hijau (Kretek)', 'category' => 'Rokok', 'price' => 20000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0503', 'name' => '234 Premium 12', 'category' => 'Rokok', 'price' => 22000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0504', 'name' => '234 Premium 16', 'category' => 'Rokok', 'price' => 26000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0505', 'name' => '76 Kretek 10', 'category' => 'Rokok', 'price' => 12000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0506', 'name' => '76 Kretek 12', 'category' => 'Rokok', 'price' => 16000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0507', 'name' => '76 Madu', 'category' => 'Rokok', 'price' => 14000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0508', 'name' => '76 Mangga', 'category' => 'Rokok', 'price' => 14000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0509', 'name' => 'A Mild Mentol', 'category' => 'Rokok', 'price' => 34000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0510', 'name' => 'Aga +', 'category' => 'Rokok', 'price' => 16000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0511', 'name' => 'A-Mild 12', 'category' => 'Rokok', 'price' => 32000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0512', 'name' => 'A-Mild 16', 'category' => 'Rokok', 'price' => 34000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0513', 'name' => 'AO Bold', 'category' => 'Rokok', 'price' => 17000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0514', 'name' => 'Apache Filter', 'category' => 'Rokok', 'price' => 21000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0515', 'name' => 'Apache Kretek', 'category' => 'Rokok', 'price' => 11000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0516', 'name' => 'Chift Filter', 'category' => 'Rokok', 'price' => 17000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0517', 'name' => 'Contry', 'category' => 'Rokok', 'price' => 27000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0518', 'name' => 'Dunhill Hitam', 'category' => 'Rokok', 'price' => 29000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0519', 'name' => 'Dunhill Putih', 'category' => 'Rokok', 'price' => 29000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0520', 'name' => 'Ferro', 'category' => 'Rokok', 'price' => 20000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0521', 'name' => 'Gajah Baru', 'category' => 'Rokok', 'price' => 19000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0522', 'name' => 'Galang Baru', 'category' => 'Rokok', 'price' => 17000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0523', 'name' => 'Gandum', 'category' => 'Rokok', 'price' => 16000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0524', 'name' => 'Geo Mild', 'category' => 'Rokok', 'price' => 25000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0525', 'name' => 'GG Djaja', 'category' => 'Rokok', 'price' => 15000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0526', 'name' => 'GG Inter', 'category' => 'Rokok', 'price' => 26000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0527', 'name' => 'GG Merah 12', 'category' => 'Rokok', 'price' => 16000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0528', 'name' => 'GG Merah 16', 'category' => 'Rokok', 'price' => 19000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0529', 'name' => 'Halim', 'category' => 'Rokok', 'price' => 24000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0530', 'name' => 'Jarum King', 'category' => 'Rokok', 'price' => 22000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0531', 'name' => 'Kopi', 'category' => 'Rokok', 'price' => 9000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0532', 'name' => 'LA Bold 12', 'category' => 'Rokok', 'price' => 22000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0533', 'name' => 'LA Bold 16', 'category' => 'Rokok', 'price' => 29000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0534', 'name' => 'LA Bold 20', 'category' => 'Rokok', 'price' => 38000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0535', 'name' => 'LA Ice 16', 'category' => 'Rokok', 'price' => 31000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0536', 'name' => 'LA Mentol', 'category' => 'Rokok', 'price' => 32000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0537', 'name' => 'Magnum Max', 'category' => 'Rokok', 'price' => 17000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0538', 'name' => 'Malboro Black Bolong', 'category' => 'Rokok', 'price' => 23000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0539', 'name' => 'Marlboro Kretek Biru', 'category' => 'Rokok', 'price' => 33000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0540', 'name' => 'Marlboro Kretek Merah', 'category' => 'Rokok', 'price' => 43000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0541', 'name' => 'Marlboro Merah', 'category' => 'Rokok', 'price' => 43000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0542', 'name' => 'MLD Hitam 12', 'category' => 'Rokok', 'price' => 32000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0543', 'name' => 'Mlinjo', 'category' => 'Rokok', 'price' => 16000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0544', 'name' => 'Patra', 'category' => 'Rokok', 'price' => 14000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0545', 'name' => 'Promild Merah', 'category' => 'Rokok', 'price' => 34000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0546', 'name' => 'Promild Putih', 'category' => 'Rokok', 'price' => 34000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0547', 'name' => 'Raptor', 'category' => 'Rokok', 'price' => 16000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0548', 'name' => 'Rudal', 'category' => 'Rokok', 'price' => 12000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0549', 'name' => 'Sampoerna Legid Hijau', 'category' => 'Rokok', 'price' => 17000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0550', 'name' => 'Score', 'category' => 'Rokok', 'price' => 9000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0551', 'name' => 'Scorpion', 'category' => 'Rokok', 'price' => 27000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0552', 'name' => 'Senior Coffe', 'category' => 'Rokok', 'price' => 16000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0553', 'name' => 'Signatur Biru', 'category' => 'Rokok', 'price' => 30000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0554', 'name' => 'Signatur Coklat', 'category' => 'Rokok', 'price' => 24000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0555', 'name' => 'ST', 'category' => 'Rokok', 'price' => 13000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0556', 'name' => 'Sukun Hijau', 'category' => 'Rokok', 'price' => 11000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0557', 'name' => 'Sukun Mangno', 'category' => 'Rokok', 'price' => 16000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0558', 'name' => 'Sukun Nom', 'category' => 'Rokok', 'price' => 11000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0559', 'name' => 'Sukun Putih', 'category' => 'Rokok', 'price' => 18000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0560', 'name' => 'Sukun Tuwek', 'category' => 'Rokok', 'price' => 10000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0561', 'name' => 'Surya 12', 'category' => 'Rokok', 'price' => 26000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0562', 'name' => 'Surya 16 Coklat', 'category' => 'Rokok', 'price' => 23000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0563', 'name' => 'Surya 16 Merah', 'category' => 'Rokok', 'price' => 23000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0564', 'name' => 'Viper', 'category' => 'Rokok', 'price' => 11000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0565', 'name' => 'Wismilak', 'category' => 'Rokok', 'price' => 21000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0566', 'name' => 'Ziga Filter', 'category' => 'Rokok', 'price' => 17000, 'unit' => 'pcs'],
+            ['code' => 'RAK-E0567', 'name' => 'Ziga Kretek', 'category' => 'Rokok', 'price' => 12000, 'unit' => 'pcs'],
+            ['code' => 'RAK-G0101', 'name' => 'Telur 1/4', 'category' => 'Bahan Pokok', 'price' => 7500, 'unit' => 'kg'],
+            ['code' => 'RAK-G0102', 'name' => 'Telur 1/2', 'category' => 'Bahan Pokok', 'price' => 14500, 'unit' => 'kg'],
+            ['code' => 'RAK-G0103', 'name' => 'Telur 1 Kg', 'category' => 'Bahan Pokok', 'price' => 28000, 'unit' => 'kg'],
+            ['code' => 'RAK-G0104', 'name' => 'Bawang 1/4', 'category' => 'Bahan Pokok', 'price' => 10000, 'unit' => 'kg'],
+            ['code' => 'RAK-G0105', 'name' => 'Bawang 1/2', 'category' => 'Bahan Pokok', 'price' => 20000, 'unit' => 'kg'],
+            ['code' => 'RAK-G0106', 'name' => 'Bawang 1 Kg', 'category' => 'Bahan Pokok', 'price' => 39000, 'unit' => 'kg'],
+            ['code' => 'RAK-G0107', 'name' => 'Kemiri 1/2 Ons', 'category' => 'Bahan Pokok', 'price' => 3500, 'unit' => 'pcs'],
+            ['code' => 'RAK-G0108', 'name' => 'Kemiri 1 Ons', 'category' => 'Bahan Pokok', 'price' => 7000, 'unit' => 'pcs'],
+            ['code' => 'RAK-G0109', 'name' => 'Kemiri 1/4', 'category' => 'Bahan Pokok', 'price' => 14500, 'unit' => 'pcs'],
+            ['code' => 'RAK-G0110', 'name' => 'Kemiri 1/2', 'category' => 'Bahan Pokok', 'price' => 28500, 'unit' => 'pcs'],
+            ['code' => 'RAK-G0111', 'name' => 'Kemiri 1 Kg', 'category' => 'Bahan Pokok', 'price' => 56000, 'unit' => 'pcs'],
+            ['code' => 'RAK-G0112', 'name' => 'Gula Merah 1/4', 'category' => 'Bahan Pokok', 'price' => 4500, 'unit' => 'kg'],
+            ['code' => 'RAK-G0113', 'name' => 'Gula Merah 1/2', 'category' => 'Bahan Pokok', 'price' => 8500, 'unit' => 'kg'],
+            ['code' => 'RAK-G0114', 'name' => 'Gula Merah 1 Kg', 'category' => 'Bahan Pokok', 'price' => 16000, 'unit' => 'kg'],
+            ['code' => 'RAK-G0115', 'name' => 'Tumbar 1/2 Ons', 'category' => 'Bahan Pokok', 'price' => 2000, 'unit' => 'pcs'],
+            ['code' => 'RAK-G0116', 'name' => 'Tumbar 1 Ons', 'category' => 'Bahan Pokok', 'price' => 3500, 'unit' => 'pcs'],
+            ['code' => 'RAK-G0117', 'name' => 'Tumbar 1/4', 'category' => 'Bahan Pokok', 'price' => 7000, 'unit' => 'pcs'],
+            ['code' => 'RAK-G0118', 'name' => 'Tumbar 1/2', 'category' => 'Bahan Pokok', 'price' => 12000, 'unit' => 'pcs'],
+            ['code' => 'RAK-G0119', 'name' => 'Tumbar 1 Kg', 'category' => 'Bahan Pokok', 'price' => 22000, 'unit' => 'pcs'],
+            ['code' => 'RAK-G0120', 'name' => 'Lombok Garing 1/2 Ons', 'category' => 'Bahan Pokok', 'price' => 4000, 'unit' => 'pcs'],
+            ['code' => 'RAK-G0121', 'name' => 'Lombok Garing 1 Ons', 'category' => 'Bahan Pokok', 'price' => 8000, 'unit' => 'pcs'],
+            ['code' => 'RAK-G0122', 'name' => 'Lombok Garing 1/4', 'category' => 'Bahan Pokok', 'price' => 19000, 'unit' => 'pcs'],
+            ['code' => 'RAK-G0123', 'name' => 'Lombok Garing 1/2', 'category' => 'Bahan Pokok', 'price' => 37000, 'unit' => 'pcs'],
+            ['code' => 'RAK-G0124', 'name' => 'Lombok Garing 1 Kg', 'category' => 'Bahan Pokok', 'price' => 75000, 'unit' => 'pcs'],
+            ['code' => 'RAK-G0125', 'name' => 'Teri 1/2 Ons', 'category' => 'Bahan Pokok', 'price' => 6000, 'unit' => 'pcs'],
+            ['code' => 'RAK-G0126', 'name' => 'Teri 1 Ons', 'category' => 'Bahan Pokok', 'price' => 11500, 'unit' => 'pcs'],
+            ['code' => 'RAK-G0127', 'name' => 'Teri 1/4', 'category' => 'Bahan Pokok', 'price' => 22500, 'unit' => 'pcs'],
+            ['code' => 'RAK-G0128', 'name' => 'Teri 1/2', 'category' => 'Bahan Pokok', 'price' => 45000, 'unit' => 'pcs'],
+            ['code' => 'RAK-G0129', 'name' => 'Teri 1 Kg', 'category' => 'Bahan Pokok', 'price' => 90000, 'unit' => 'pcs'],
+            ['code' => 'RAK-G0130', 'name' => 'Krupuk Mentah 1/4', 'category' => 'Bahan Pokok', 'price' => 5000, 'unit' => 'pcs'],
+            ['code' => 'RAK-G0131', 'name' => 'Krupuk Mentah 1/2', 'category' => 'Bahan Pokok', 'price' => 10000, 'unit' => 'pcs'],
+            ['code' => 'RAK-G0132', 'name' => 'Krupuk Mentah 1 Kg', 'category' => 'Bahan Pokok', 'price' => 20000, 'unit' => 'pcs'],
+            ['code' => 'RAK-G0133', 'name' => 'Krupuk Mateng 1/4', 'category' => 'Bahan Pokok', 'price' => 7500, 'unit' => 'pcs'],
+            ['code' => 'RAK-G0134', 'name' => 'Krupuk Mateng 1/2', 'category' => 'Bahan Pokok', 'price' => 15000, 'unit' => 'pcs'],
+            ['code' => 'RAK-G0135', 'name' => 'Krupuk Mateng 1 Kg', 'category' => 'Bahan Pokok', 'price' => 30000, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0301', 'name' => 'Pewarna makanan Alco', 'category' => 'Kue', 'price' => 2000, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0302', 'name' => 'Morison ', 'category' => 'Kue', 'price' => 7000, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0303', 'name' => 'Soda kue', 'category' => 'Kue', 'price' => 2500, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0304', 'name' => 'Metega', 'category' => 'Kue', 'price' => 3500, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0305', 'name' => 'Sp', 'category' => 'Kue', 'price' => 2500, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0306', 'name' => 'Jelly lucky ball', 'category' => 'Kue', 'price' => 9000, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0307', 'name' => 'Ovalet', 'category' => 'Kue', 'price' => 2500, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0308', 'name' => 'Vanili cap dali botol', 'category' => 'Kue', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0309', 'name' => 'Baking powdercap dali botol', 'category' => 'Kue', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0310', 'name' => 'Ragi ', 'category' => 'Kue', 'price' => 11500, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0311', 'name' => 'Tepung Beras 500g', 'category' => 'Kue', 'price' => 7500, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0312', 'name' => 'Tepung ketan 500g', 'category' => 'Kue', 'price' => 11500, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0401', 'name' => 'Obat Nyamuk Sapi Kuning', 'category' => 'Obat Nyamuk', 'price' => 4500, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0402', 'name' => 'Obat Nyamuk Sapi hitam', 'category' => 'Obat Nyamuk', 'price' => 5000, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0403', 'name' => 'Obat Nyamuk Vape', 'category' => 'Obat Nyamuk', 'price' => 4500, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0404', 'name' => 'Obat nyamuk Kingkong', 'category' => 'Obat Nyamuk', 'price' => 5000, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0405', 'name' => 'Obat Nyamuk Bakar Baygon ', 'category' => 'Obat Nyamuk', 'price' => 5000, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0406', 'name' => 'Baygon Silky Lavender 400ml', 'category' => 'Obat Nyamuk', 'price' => 30000, 'unit' => 'ml'],
+            ['code' => 'RAK-C0407', 'name' => 'Baygon Japanese peach 600ml', 'category' => 'Obat Nyamuk', 'price' => 35000, 'unit' => 'ml'],
+            ['code' => 'RAK-C0408', 'name' => 'Hit Anti Nyamuk 400ml', 'category' => 'Obat Nyamuk', 'price' => 28000, 'unit' => 'ml'],
+            ['code' => 'RAK-C0409', 'name' => 'Hit Anti Nyamuk Elektrik 45hari', 'category' => 'Obat Nyamuk', 'price' => 21000, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0410', 'name' => 'Vape Mat 4.1 MV 21', 'category' => 'Obat Nyamuk', 'price' => 6000, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0411', 'name' => 'Hit Mat 18+12', 'category' => 'Obat Nyamuk', 'price' => 7000, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0412', 'name' => 'Hit Piramida', 'category' => 'Obat Nyamuk', 'price' => 2500, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0413', 'name' => 'Vape Elektrik ekonomis', 'category' => 'Obat Nyamuk', 'price' => 12000, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0414', 'name' => 'Hit Elektrik Ekonomis 6mat', 'category' => 'Obat Nyamuk', 'price' => 11000, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0415', 'name' => 'Hit Anti Nyamuk 180ml ', 'category' => 'Obat Nyamuk', 'price' => 18000, 'unit' => 'ml'],
+            ['code' => 'RAK-C0416', 'name' => 'Hit Refil 45hari', 'category' => 'Obat Nyamuk', 'price' => 16500, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0417', 'name' => 'Kiriko Lem tikus', 'category' => 'Rumah Tangga', 'price' => 13500, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0418', 'name' => 'Stella 42+13g', 'category' => 'Rumah Tangga', 'price' => 10000, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0419', 'name' => 'Stella 200ml', 'category' => 'Rumah Tangga', 'price' => 19000, 'unit' => 'ml'],
+            ['code' => 'RAK-C0420', 'name' => 'Lilin Naga K', 'category' => 'Rumah Tangga', 'price' => 1500, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0421', 'name' => 'Lilin Pinguin B ', 'category' => 'Rumah Tangga', 'price' => 2000, 'unit' => 'pcs'],
+            ['code' => 'RAK-C0201', 'name' => 'Teligu 1/4', 'category' => 'Bahan Pokok', 'price' => 2500, 'unit' => 'kg'],
+            ['code' => 'RAK-C0202', 'name' => 'Teligu 1/2', 'category' => 'Bahan Pokok', 'price' => 4500, 'unit' => 'kg'],
+            ['code' => 'RAK-C0203', 'name' => 'Teligu 1 Kg', 'category' => 'Bahan Pokok', 'price' => 17500, 'unit' => 'kg'],
+            ['code' => 'RAK-C0204', 'name' => 'Teligu cakra kembar', 'category' => 'Bahan Pokok', 'price' => 12000, 'unit' => 'kg'],
+            ['code' => 'RAK-C0205', 'name' => 'Teligu Lencana Merah', 'category' => 'Bahan Pokok', 'price' => 11000, 'unit' => 'kg'],
+            ['code' => 'RAK-C0206', 'name' => 'Teligu Segitiga biru ', 'category' => 'Bahan Pokok', 'price' => 12500, 'unit' => 'kg'],
+            ['code' => 'RAK-C0207', 'name' => 'Tepung Maizena ', 'category' => 'Bahan Pokok', 'price' => 5000, 'unit' => 'kg'],
+            ['code' => 'RAK-C0101', 'name' => 'Kopi 1/4', 'category' => 'Bahan Pokok', 'price' => 22500, 'unit' => 'kg'],
+            ['code' => 'RAK-C0102', 'name' => 'Kopi 1/2', 'category' => 'Bahan Pokok', 'price' => 44000, 'unit' => 'kg'],
+            ['code' => 'RAK-C0103', 'name' => 'Kopi 1 kg', 'category' => 'Bahan Pokok', 'price' => 88000, 'unit' => 'kg'],
+            ['code' => 'RAK-C0104', 'name' => 'Gula 1/4', 'category' => 'Bahan Pokok', 'price' => 4500, 'unit' => 'kg'],
+            ['code' => 'RAK-C0105', 'name' => 'Gula 1/2', 'category' => 'Bahan Pokok', 'price' => 9000, 'unit' => 'kg'],
+            ['code' => 'RAK-C0106', 'name' => 'Gula 1 Kg', 'category' => 'Bahan Pokok', 'price' => 17500, 'unit' => 'kg'],
+            ['code' => 'GDG-A0101', 'name' => 'Ale-Ale', 'category' => 'Minuman', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0102', 'name' => 'Aqua', 'category' => 'Minuman', 'price' => 34000, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0103', 'name' => 'Aqua Besar', 'category' => 'Minuman', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0104', 'name' => 'Aqua Galon Asli', 'category' => 'Minuman', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0105', 'name' => 'Aqua Mini', 'category' => 'Minuman', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0106', 'name' => 'Aqua Palsu', 'category' => 'Minuman', 'price' => 4500, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0107', 'name' => 'Aqua Tanggung', 'category' => 'Minuman', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0108', 'name' => 'Cleo Galon', 'category' => 'Minuman', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0109', 'name' => 'Cleo Gelas', 'category' => 'Minuman', 'price' => 23000, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0110', 'name' => 'Cleo mini', 'category' => 'Minuman', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0111', 'name' => 'Cleo Tanggung', 'category' => 'Minuman', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0112', 'name' => 'Club gelas', 'category' => 'Minuman', 'price' => 22000, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0113', 'name' => 'Es teler', 'category' => 'Minuman', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0114', 'name' => 'Garam Kasar', 'category' => 'Minuman', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0115', 'name' => 'Kopikap', 'category' => 'Minuman', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0116', 'name' => 'Leminerale Besar', 'category' => 'Minuman', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0117', 'name' => 'Leminerale Galon', 'category' => 'Minuman', 'price' => 19000, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0118', 'name' => 'Leminerale Mini', 'category' => 'Minuman', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0119', 'name' => 'Leminerale Tanggung', 'category' => 'Minuman', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0120', 'name' => 'Malika', 'category' => 'Minuman', 'price' => 16000, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0121', 'name' => 'Milky Jelly', 'category' => 'Minuman', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0122', 'name' => 'Okky Jelly Big', 'category' => 'Minuman', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0123', 'name' => 'Okky Jelly Kecil', 'category' => 'Minuman', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0124', 'name' => 'PureLife Mini', 'category' => 'Minuman', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0125', 'name' => 'PureLife Tanggung', 'category' => 'Minuman', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0126', 'name' => 'Rio', 'category' => 'Minuman', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0127', 'name' => 'Teh Bandulan', 'category' => 'Minuman', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0128', 'name' => 'Mie Sedap Goreng', 'category' => 'Makanan', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0129', 'name' => 'Mie Sedap Kuah', 'category' => 'Makanan', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0130', 'name' => 'Wur Ayam Hijau 91', 'category' => 'Wur', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0131', 'name' => 'Wur Ayam Hijau 92', 'category' => 'Wur', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0132', 'name' => 'Wur Ayam Merah', 'category' => 'Wur', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0133', 'name' => 'Mie Indomie Goreng', 'category' => 'Makanan', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0134', 'name' => 'Mie Indomie Kuah', 'category' => 'Makanan', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0135', 'name' => 'LPG', 'category' => 'Bahan Pokok', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0136', 'name' => 'Mie Buwuhan 1 Bandat', 'category' => 'Bahan Pokok', 'price' => 0, 'unit' => 'pcs'],
+            ['code' => 'GDG-A0137', 'name' => 'Mie Buwuhan 1 Biji', 'category' => 'Bahan Pokok', 'price' => 0, 'unit' => 'pcs'],
+        ];
 
-        // Beras
-        $beras = Product::create([
-            'name' => 'Beras Premium',
-            'barcode' => '1234567890001',
-            'category_id' => $sembakoCategory->id,
-            'description' => 'Beras premium kualitas terbaik',
-            'stock_alert_minimum' => 10000, // 10 kg dalam gram
-        ]);
+       foreach ($productsData as $data) {
+    // 1. Cari atau buat kategori
+    $category = Category::firstOrCreate(['name' => $data['category']]);
 
-        // Unit untuk beras
-        ProductUnit::create([
-            'product_id' => $beras->id,
-            'unit_id' => $gramUnit->id,
-            'price' => 12.50,
+    // 2. Gunakan updateOrCreate untuk menghindari error Duplicate Entry
+    $product = Product::updateOrCreate(
+        ['barcode' => $data['code']], // Cek berdasarkan barcode ini
+        [
+            'name' => $data['name'],
+            'category_id' => $category->id,
+            'description' => 'Produk ' . $data['name'] . ' kategori ' . $data['category'],
+            'stock_alert_minimum' => 5,
+        ]
+    );
+
+    // 3. Tentukan Unit ID
+    $unitId = match($data['unit']) {
+        'sct' => $sachUnit->id,
+        'kg'  => $kgUnit->id,
+        'g'   => $gramUnit->id,
+        'ml'  => $mlUnit->id,
+        default => $pcsUnit->id,
+    };
+
+    // 4. Gunakan updateOrCreate juga untuk ProductUnit agar tidak duplikat
+    ProductUnit::updateOrCreate(
+        [
+            'product_id' => $product->id,
+            'unit_id' => $unitId,
+        ],
+        [
+            'price' => $data['price'],
             'conversion_rate' => 1,
             'is_base_unit' => true,
-        ]);
+        ]
+    );
 
-        ProductUnit::create([
-            'product_id' => $beras->id,
-            'unit_id' => $kgUnit->id,
-            'price' => 12500,
-            'conversion_rate' => 1000,
-            'is_base_unit' => false,
-        ]);
-
-        // Stock awal beras
-        Stock::create([
-            'product_id' => $beras->id,
-            'unit_id' => $kgUnit->id,
-            'quantity' => 50, // 50 kg
-        ]);
-
-        // Minyak Goreng
-        $minyak = Product::create([
-            'name' => 'Minyak Goreng Tropical',
-            'barcode' => '1234567890002',
-            'category_id' => $sembakoCategory->id,
-            'description' => 'Minyak goreng berkualitas',
-            'stock_alert_minimum' => 2000, // 2 liter dalam ml
-        ]);
-
-        ProductUnit::create([
-            'product_id' => $minyak->id,
-            'unit_id' => $mlUnit->id,
-            'price' => 15,
-            'conversion_rate' => 1,
-            'is_base_unit' => true,
-        ]);
-
-        ProductUnit::create([
-            'product_id' => $minyak->id,
-            'unit_id' => $literUnit->id,
-            'price' => 15000,
-            'conversion_rate' => 1000,
-            'is_base_unit' => false,
-        ]);
-
-        Stock::create([
-            'product_id' => $minyak->id,
-            'unit_id' => $literUnit->id,
-            'quantity' => 20, // 20 liter
-        ]);
-
-        // Gula Pasir
-        $gula = Product::create([
-            'name' => 'Gula Pasir Lokal',
-            'barcode' => '1234567890003',
-            'category_id' => $sembakoCategory->id,
-            'description' => 'Gula pasir berkualitas lokal',
-            'stock_alert_minimum' => 5000, // 5 kg dalam gram
-        ]);
-
-        ProductUnit::create([
-            'product_id' => $gula->id,
-            'unit_id' => $gramUnit->id,
-            'price' => 14,
-            'conversion_rate' => 1,
-            'is_base_unit' => true,
-        ]);
-
-        ProductUnit::create([
-            'product_id' => $gula->id,
-            'unit_id' => $kgUnit->id,
-            'price' => 14000,
-            'conversion_rate' => 1000,
-            'is_base_unit' => false,
-        ]);
-
-        Stock::create([
-            'product_id' => $gula->id,
-            'unit_id' => $kgUnit->id,
-            'quantity' => 25, // 25 kg
-        ]);
-
-        // Indomie
-        $indomie = Product::create([
-            'name' => 'Indomie Goreng',
-            'barcode' => '1234567890004',
-            'category_id' => $makminCategory->id,
-            'description' => 'Mie instan rasa ayam bawang',
-            'stock_alert_minimum' => 24, // 2 dus
-        ]);
-
-        ProductUnit::create([
-            'product_id' => $indomie->id,
-            'unit_id' => $pcsUnit->id,
-            'price' => 3500,
-            'conversion_rate' => 1,
-            'is_base_unit' => true,
-        ]);
-
-        ProductUnit::create([
-            'product_id' => $indomie->id,
-            'unit_id' => $packUnit->id, // 1 pack = 5 pcs
-            'price' => 17000,
-            'conversion_rate' => 5,
-            'is_base_unit' => false,
-        ]);
-
-        Stock::create([
-            'product_id' => $indomie->id,
-            'unit_id' => $packUnit->id,
-            'quantity' => 20, // 20 pack
-        ]);
-
-        // Kopi Sachet
-        $kopi = Product::create([
-            'name' => 'Kopi Kapal Api Sachet',
-            'barcode' => '1234567890005',
-            'category_id' => $makminCategory->id,
-            'description' => 'Kopi instant sachet',
-            'stock_alert_minimum' => 50,
-        ]);
-
-        ProductUnit::create([
-            'product_id' => $kopi->id,
-            'unit_id' => $sachUnit->id,
-            'price' => 1000,
-            'conversion_rate' => 1,
-            'is_base_unit' => true,
-        ]);
-
-        ProductUnit::create([
-            'product_id' => $kopi->id,
-            'unit_id' => $packUnit->id, // 1 pack = 10 sachet
-            'price' => 9500,
-            'conversion_rate' => 10,
-            'is_base_unit' => false,
-        ]);
-
-        Stock::create([
-            'product_id' => $kopi->id,
-            'unit_id' => $packUnit->id,
-            'quantity' => 15, // 15 pack
-        ]);
-
-        // Chitato
-        $chitato = Product::create([
-            'name' => 'Chitato Rasa Sapi Panggang',
-            'barcode' => '1234567890006',
-            'category_id' => $snackCategory->id,
-            'description' => 'Keripik kentang rasa sapi panggang',
-            'stock_alert_minimum' => 12,
-        ]);
-
-        ProductUnit::create([
-            'product_id' => $chitato->id,
-            'unit_id' => $pcsUnit->id,
-            'price' => 8500,
-            'conversion_rate' => 1,
-            'is_base_unit' => true,
-        ]);
-
-        Stock::create([
-            'product_id' => $chitato->id,
-            'unit_id' => $pcsUnit->id,
-            'quantity' => 24, // 24 pcs
-        ]);
+    // 5. Cek stok, jika belum ada baru buat (opsional agar tidak menimpa stok yang sudah ada)
+    Stock::firstOrCreate(
+        [
+            'product_id' => $product->id,
+            'unit_id' => $unitId,
+        ],
+        [
+            'quantity' => 10,
+        ]
+    );
+}
     }
 }

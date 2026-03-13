@@ -49,7 +49,42 @@ class UnitController extends Controller
             return back()->withErrors(['error' => 'Gagal menambahkan unit: ' . $e->getMessage()]);
         }
     }
+    /**
+     * Store a newly created resource via API.
+     */
+    public function apiStore(Request $request)
+    {
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255|unique:units,name',
+                'symbol' => 'required|string|max:10|unique:units,symbol',
+                'description' => 'nullable|string|max:500',
+            ], [
+                'name.required' => 'Nama unit wajib diisi',
+                'name.unique' => 'Nama unit sudah ada',
+                'symbol.required' => 'Symbol unit wajib diisi',
+                'symbol.unique' => 'Symbol unit sudah ada',
+            ]);
 
+            $unit = Unit::create($request->all());
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Satuan berhasil ditambahkan',
+                'data' => $unit
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->errors()[array_key_first($e->errors())][0],
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menambahkan unit: ' . $e->getMessage()
+            ], 500);
+        }
+    }
     /**
      * Display the specified resource.
      */

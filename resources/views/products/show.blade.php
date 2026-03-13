@@ -55,13 +55,13 @@
                 <div class="space-y-4">
                     <div>
                         <dt class="text-sm font-medium text-gray-500">Minimum Stok Alert</dt>
-                        <dd class="mt-1 text-sm text-gray-900">{{ number_format($product->stock_alert_minimum, 2) }}</dd>
+                        <dd class="mt-1 text-sm text-gray-900">{{ number_format($product->stock_alert_minimum, 0, ',', '.') }}</dd>
                     </div>
                     
                     <div>
                         <dt class="text-sm font-medium text-gray-500">Total Stok (Satuan Dasar)</dt>
                         <dd class="mt-1 text-sm text-gray-900">
-                            {{ number_format($product->getTotalStockInBaseUnit(), 2) }} {{ $product->getBaseUnit()->unit->symbol ?? '' }}
+                            {{ number_format($product->getTotalStockInBaseUnit(), 0, ',', '.') }} {{ $product->getBaseUnit()->unit->symbol ?? '' }}
                             @if($product->isLowStock())
                                 <span class="ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
                                     Stok Rendah
@@ -120,7 +120,7 @@
                             @php
                                 $stock = $product->stocks->where('unit_id', $productUnit->unit_id)->first();
                             @endphp
-                            {{ $stock ? number_format($stock->quantity, 2) : '0.00' }} {{ $productUnit->unit->symbol }}
+                            {{ $stock ? number_format($stock->quantity, 0, ',', '.') : '0' }} {{ $productUnit->unit->symbol }}
                         </td>
                     </tr>
                     @endforeach
@@ -157,7 +157,7 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ number_format($movement->quantity, 2) }} {{ $movement->unit->symbol }}
+                            {{ number_format($movement->quantity, 0, ',', '.') }} {{ $movement->unit->symbol }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {{ ucfirst($movement->reference_type) }}

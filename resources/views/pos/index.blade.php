@@ -210,9 +210,13 @@
                         </div>
                     </div>
 
-                    <div x-show="searchQuery.length > 0 && searchResults.length > 0"
+                    <div x-show="searchQuery.length > 0"
                          class="mt-4 border border-gray-200 rounded-lg max-h-80 overflow-y-auto custom-scrollbar">
-                        <template x-for="product in searchResults" :key="product.id">
+                        
+                        <!-- Block jika ada hasil (searchResults > 0) -->
+                        <template x-if="searchResults.length > 0">
+                            <div>
+                                <template x-for="product in searchResults" :key="product.id">
                             <div class="search-result-enhanced p-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors">
                                 <div class="flex justify-between items-start">
                                     <div class="flex-1">
@@ -262,11 +266,13 @@
                                 </div>
                             </div>
                         </template>
+                            </div>
+                        </template>
                         
                         <div x-show="searchQuery.length >= 2 && searchResults.length === 0 && !isSearching" 
                              class="p-4 text-center text-gray-500">
                             <i class="fas fa-search text-2xl mb-2"></i>
-                            <p x-text="'Tidak ada produk ditemukan untuk \"' + searchQuery + '\"'"></p>
+                            <p x-text="'Tidak ada produk ditemukan untuk \"' + searchQuery + '\"'">Tidak ada produk ditemukan</p>
                         </div>
                     </div>
                 </div>
@@ -344,17 +350,21 @@
 
                                     <div class="flex items-center justify-between w-full sm:w-auto space-x-4">
                                         <div class="quantity-stepper flex items-center space-x-2 px-2 py-1"
-                                             :class="{ 'has-limits': (item.min_purchase || 1) > 1 || item.max_purchase }">
+                                             :class="{ 'has-limits': (item.min_purchase || 0.01) > 0.01 || item.max_purchase }">
                                             <button
-                                                @click="updateQuantity(item.id, item.quantity - 1)"
+                                                @click="updateQuantity(item.id, Number((item.quantity - 1).toFixed(2)))"
                                                 :disabled="item.quantity <= (item.min_purchase || 1)"
                                                 :class="item.quantity <= (item.min_purchase || 1) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-100'"
                                                 class="w-7 h-7 bg-red-50 text-red-600 rounded-full flex items-center justify-center transition-colors">
                                                 <i class="fas fa-minus text-xs"></i>
                                             </button>
-                                            <div class="text-sm font-semibold w-8 text-center" x-text="item.quantity"></div>
+                                            <input type="number" 
+                                                x-model.number="item.quantity" 
+                                                @change="updateQuantity(item.id, item.quantity)"
+                                                step="0.01"
+                                                class="text-sm font-semibold w-12 text-center bg-transparent border-none focus:ring-0 p-0" />
                                             <button
-                                                @click="updateQuantity(item.id, item.quantity + 1)"
+                                                @click="updateQuantity(item.id, Number((item.quantity + 1).toFixed(2)))"
                                                 :disabled="item.max_purchase && item.quantity >= item.max_purchase"
                                                 :class="(item.max_purchase && item.quantity >= item.max_purchase) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-100'"
                                                 class="w-7 h-7 bg-green-50 text-green-600 rounded-full flex items-center justify-center transition-colors">
@@ -366,10 +376,7 @@
                                             <div class="text-right">
                                                 <div class="text-lg font-bold text-gray-900" 
                                                      x-text="formatCurrency(item.quantity * item.price)"></div>
-                                                <div x-show="(item.discount_amount || 0) > 0" 
-                                                     class="text-xs text-green-600 font-medium">
-                                                     <span x-text="'Hemat: ' + formatCurrency(item.discount_amount || 0)"></span>
-                                                </div>
+                                                
                                             </div>
                                             <button
                                                 @click="removeFromCart(item.id)"
@@ -398,10 +405,7 @@
                         </div>
                         
                         <div x-show="totalSavings > 0" class="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
-                            <div class="flex items-center space-x-2">
-                                <i class="fas fa-piggy-bank text-green-600"></i>
-                                <span class="text-green-800 font-medium">Total Hemat:</span>
-                            </div>
+                            
                             <span class="font-bold text-lg text-green-800" x-text="formatCurrency(totalSavings)"></span>
                         </div>
                         
@@ -815,8 +819,8 @@
                                 base_price: priceData.data.base_price,
                                 price: priceData.data.final_price,
                                 quantity: quantity,
-                                min_purchase: productUnit.min_purchase || 1,
-                                max_purchase: productUnit.max_purchase || null,
+                                min_purchase: Number(productUnit.min_purchase) || 1,
+                                max_purchase: Number(productUnit.max_purchase) || null,
                                 enable_tiered_pricing: productUnit.enable_tiered_pricing,
                                 tiered_prices: productUnit.tiered_prices || [],
                                 applied_tier: priceData.data.applied_tier,
@@ -839,8 +843,8 @@
                 },
 
                 calculateTieredPriceLocally(productUnit, quantity) {
-                    const minPurchase = productUnit.min_purchase || 1;
-                    const maxPurchase = productUnit.max_purchase;
+                    const minPurchase = Number(productUnit.min_purchase) || 1;
+                    const maxPurchase = Number(productUnit.max_purchase);
 
                     if (quantity < minPurchase) {
                         return { success: false, message: `Minimal pembelian ${minPurchase} unit` };
@@ -889,8 +893,8 @@
                     if (itemIndex < 0) return;
                 
                     const item = this.cart[itemIndex];
-                    const minQty = item.min_purchase || 1;
-                    const maxQty = item.max_purchase;
+                    const minQty = Number(item.min_purchase) || 1;
+                    const maxQty = Number(item.max_purchase);
                 
                     if (newQuantity < minQty) {
                         this.removeFromCart(itemId);
@@ -979,13 +983,13 @@
                     // If no tier reached yet, calculate progress to first tier
                     if (currentTierIndex === -1) {
                         const firstTier = sortedTiers[0];
-                        return Math.min(100, (item.quantity / firstTier.min_quantity) * 100);
+                        return Math.min(100, (Number(item.quantity) / Number(firstTier.min_quantity)) * 100);
                     }
                     
                     // Calculate progress to next tier
                     const currentTier = sortedTiers[currentTierIndex];
-                    const progressRange = nextTier.min_quantity - currentTier.min_quantity;
-                    const currentProgress = item.quantity - currentTier.min_quantity;
+                    const progressRange = Number(nextTier.min_quantity) - Number(currentTier.min_quantity);
+                    const currentProgress = Number(item.quantity) - Number(currentTier.min_quantity);
                     
                     return Math.min(100, (currentProgress / progressRange) * 100);
                 },

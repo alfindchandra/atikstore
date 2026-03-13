@@ -201,18 +201,23 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
                 <label class="form-label">Satuan <span class="text-red-500">*</span></label>
-                <select name="units[INDEX][unit_id]" class="form-input unit-select" required>
-                    <option value="">Pilih Satuan</option>
-                    @foreach($units as $unit)
-                    <option value="{{ $unit->id }}">{{ $unit->name }} ({{ $unit->symbol }})</option>
-                    @endforeach
-                </select>
+                <div class="flex rounded-md shadow-sm">
+                    <select name="units[INDEX][unit_id]" class="form-input unit-select rounded-r-none" required>
+                        <option value="">Pilih Satuan</option>
+                        @foreach($units as $unit)
+                        <option value="{{ $unit->id }}">{{ $unit->name }} ({{ $unit->symbol }})</option>
+                        @endforeach
+                    </select>
+                    <button type="button" onclick="promptNewUnit(this)" class="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 hover:bg-gray-100 transition-colors" title="Tambah Satuan Baru">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
             </div>
             
             <div>
                 <label class="form-label">Harga Dasar <span class="text-red-500">*</span></label>
-                <input type="number" name="units[INDEX][price]" class="form-input unit-price" 
-                       min="0" step="1" placeholder="0" required>
+                <input type="text" inputmode="numeric" name="units[INDEX][price]" class="form-input unit-price price-input" 
+                       placeholder="0" required oninput="formatCurrency(this)">
             </div>
             
             <div>
@@ -305,8 +310,8 @@
             </div>
             <div>
                 <label class="text-xs text-gray-600">Harga</label>
-                <input type="number" name="units[UNIT_INDEX][tiered_prices][TIER_INDEX][price]" 
-                       class="form-input text-sm" min="0" step="1" required>
+                <input type="text" inputmode="numeric" name="units[UNIT_INDEX][tiered_prices][TIER_INDEX][price]" 
+                       class="form-input text-sm price-input" required oninput="formatCurrency(this)">
             </div>
         </div>
         
@@ -467,6 +472,72 @@ function generateBarcode() {
     updatePreview();
 }
 
+async function promptNewUnit(btnElement) {
+    const { value: formValues } = await Swal.fire({
+        title: 'Tambah Satuan Baru',
+        html:
+            '<div class="text-left mt-3">' +
+            '<label class="block text-sm font-medium text-gray-700">Nama Satuan <span class="text-red-500">*</span></label>' +
+            '<input id="swal-unit-name" class="swal2-input !mt-1 !w-full" placeholder="Cth: Setengah Kilo">' +
+            '<label class="block mt-4 text-sm font-medium text-gray-700">Simbol <span class="text-red-500">*</span></label>' +
+            '<input id="swal-unit-symbol" class="swal2-input !mt-1 !w-full" placeholder="Cth: 1/2kg">' +
+            '</div>',
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Simpan',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#4f46e5',
+        preConfirm: () => {
+            const name = document.getElementById('swal-unit-name').value;
+            const symbol = document.getElementById('swal-unit-symbol').value;
+            if (!name || !symbol) {
+                Swal.showValidationMessage('Nama dan Simbol satuan wajib diisi!');
+                return false;
+            }
+            return { name: name, symbol: symbol }
+        }
+    });
+
+    if (formValues) {
+        try {
+            const response = await fetch('/api/units', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify(formValues)
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                // Add the new unit to ALL select dropdowns across the page
+                const unitSelects = document.querySelectorAll('.unit-select');
+                unitSelects.forEach(select => {
+                    const option = new Option(`${result.data.name} (${result.data.symbol})`, result.data.id);
+                    select.add(option);
+                });
+                
+                // Also update the global select template memory so subsequent "Add Unit" rows will have this new option
+                const templateSelect = document.getElementById('unitTemplate').content.querySelector('.unit-select');
+                templateSelect.add(new Option(`${result.data.name} (${result.data.symbol})`, result.data.id));
+
+                // Auto-select it on the current row that pressed the button
+                const currentRowSelect = btnElement.closest('.flex').querySelector('.unit-select');
+                currentRowSelect.value = result.data.id;
+                
+                updatePreview();
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Satuan baru ditambahkan.', timer: 1500, showConfirmButton: false });
+            } else {
+                Swal.fire('Gagal', result.message || 'Terjadi kesalahan sistem', 'error');
+            }
+        } catch (error) {
+            Swal.fire('Gagal', 'Gagal memproses permintaan', 'error');
+        }
+    }
+}
+
 function setupPreviewUpdates() {
     // Name
     document.getElementById('name').addEventListener('input', updatePreview);
@@ -524,7 +595,8 @@ function updatePreview() {
         const hasTieredPricing = item.querySelector('.tiered-pricing-checkbox').checked;
         
         const unitText = unitSelect.options[unitSelect.selectedIndex]?.text || 'Pilih Satuan';
-        const price = priceInput.value ? `Rp ${parseInt(priceInput.value).toLocaleString('id-ID')}` : 'Rp 0';
+        const rawPrice = priceInput.value.replace(/\./g, '');
+        const price = rawPrice ? `Rp ${parseInt(rawPrice).toLocaleString('id-ID')}` : 'Rp 0';
         const conversion = conversionInput.value || '1';
         const minPurchase = minPurchaseInput.value || '1';
         const maxPurchase = maxPurchaseInput.value || 'Unlimited';
@@ -557,7 +629,8 @@ function updatePreview() {
                 tieredPrices.forEach(tierItem => {
                     const minQty = tierItem.querySelector('input[name*="[min_quantity]"]').value || '0';
                     const tierPrice = tierItem.querySelector('input[name*="[price]"]').value || '0';
-                    const tierPriceFormatted = parseInt(tierPrice) ? `Rp ${parseInt(tierPrice).toLocaleString('id-ID')}` : 'Rp 0';
+                    const rawTierPrice = tierPrice.replace(/\./g, '');
+                    const tierPriceFormatted = parseInt(rawTierPrice) ? `Rp ${parseInt(rawTierPrice).toLocaleString('id-ID')}` : 'Rp 0';
                     
                     unitsHtml += `<div class="text-xs text-gray-500 ml-2">
                         ≥ ${minQty} unit: ${tierPriceFormatted}
@@ -611,7 +684,7 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
         if (!unitSelect.value) {
             isValid = false;
             errorMessage = `Satuan ${index + 1}: Pilih satuan`;
-        } else if (!priceInput.value || parseFloat(priceInput.value) < 0) {
+        } else if (!priceInput.value || parseFloat(priceInput.value.replace(/\./g, '')) < 0) {
             isValid = false;
             errorMessage = `Satuan ${index + 1}: Harga harus diisi dan tidak boleh negatif`;
         } else if (!conversionInput.value || parseFloat(conversionInput.value) < 0.0001) {
@@ -655,7 +728,7 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
                 }
                 
                 const minQtyNum = parseFloat(minQty);
-                const tierPriceNum = parseFloat(tierPrice);
+                const tierPriceNum = parseFloat(tierPrice.replace(/\./g, ''));
                 
                 if (minQtyNum < 1) {
                     isValid = false;
@@ -696,6 +769,11 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
         resetSubmitButton();
         return false;
     }
+    
+    // Valid: Strip formatting dots before submitting
+    document.querySelectorAll('.price-input').forEach(input => {
+        input.value = input.value.replace(/\./g, '');
+    });
 });
 
 function resetSubmitButton() {
@@ -761,7 +839,9 @@ function loadOldValues() {
                             
                             if (currentTier) {
                                 currentTier.querySelector('input[name*="[min_quantity]"]').value = tierData.min_quantity || '';
-                                currentTier.querySelector('input[name*="[price]"]').value = tierData.price || '';
+                                const tierPriceInput = currentTier.querySelector('input[name*="[price]"]');
+                                tierPriceInput.value = tierData.price || '';
+                                formatCurrency(tierPriceInput); // Auto-format old value
                                 currentTier.querySelector('input[name*="[description]"]').value = tierData.description || '';
                             }
                         });
@@ -780,6 +860,29 @@ document.addEventListener('barcodeScan', function(e) {
     document.getElementById('barcode').value = barcode;
     updatePreview();
 });
+
+// Currency Formatter Utility
+function formatCurrency(input) {
+    if(!input) return;
+    // Save original cursor position
+    let cursorPosition = input.selectionStart;
+    let oldLength = input.value.length;
+
+    // Remove all non-numeric characters
+    let value = input.value.replace(/[^0-9]/g, '');
+    
+    // Add thousand separators
+    if (value) {
+        value = parseInt(value, 10).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+    
+    input.value = value;
+
+    // Adjust cursor position
+    let newLength = input.value.length;
+    cursorPosition = cursorPosition + (newLength - oldLength);
+    input.setSelectionRange(cursorPosition, cursorPosition);
+}
 
 // Add CSS for form styling
 const style = document.createElement('style');

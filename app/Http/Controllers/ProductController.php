@@ -15,13 +15,46 @@ use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::with(['category', 'productUnits.unit', 'stocks'])
-            ->orderBy('name')
-            ->paginate(20);
+        $query = Product::with(['category', 'productUnits.unit', 'stocks']);
 
-        return view('products.index', compact('products'));
+        // Filter: Search (Name & Barcode)
+        $query->when($request->filled('search'), function($q) use ($request) {
+            $search = mb_strtolower($request->search);
+            $q->where(function($query) use ($search) {
+                $query->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
+                      ->orWhereRaw('LOWER(barcode) LIKE ?', ["%{$search}%"]);
+            });
+        });
+
+        // Filter: Category
+        $query->when($request->filled('category_id'), function($q) use ($request) {
+            $q->where('category_id', $request->category_id);
+        });
+
+        // Filter: Status (Active/Inactive)
+        $query->when($request->filled('status'), function($q) use ($request) {
+            $q->where('is_active', $request->status == '1');
+        });
+
+        // Filter: Low or Normal Stock
+        $query->when($request->filled('stock'), function($q) use ($request) {
+            $operator = $request->stock === 'low' ? '<=' : '>';
+            $q->whereRaw("
+                (
+                    SELECT COALESCE(SUM(s.quantity * pu.conversion_rate), 0)
+                    FROM stocks s
+                    JOIN product_units pu ON s.unit_id = pu.unit_id AND s.product_id = pu.product_id
+                    WHERE s.product_id = products.id
+                ) $operator products.stock_alert_minimum
+            ");
+        });
+
+        $products = $query->orderBy('name')->paginate(20)->withQueryString();
+        $categories = Category::orderBy('name')->get();
+
+        return view('products.index', compact('products', 'categories'));
     }
 
     public function create()
@@ -149,6 +182,22 @@ public function store(Request $request)
             'units.*.price' => 'required|numeric|min:0',
             'units.*.conversion_rate' => 'required|numeric|min:0.0001',
             'units.*.is_base_unit' => 'boolean',
+            'units.*.min_purchase' => 'nullable|numeric|min:1',
+            'units.*.max_purchase' => 'nullable|numeric|gte:units.*.min_purchase',
+            'units.*.enable_tiered_pricing' => 'nullable|boolean',
+            'units.*.tiered_prices' => [
+                'nullable',
+                'array',
+                'required_if:units.*.enable_tiered_pricing,true',
+            ],
+            'units.*.tiered_prices.*.min_quantity' => [
+                'required',
+                'numeric',
+                'min:1',
+                'distinct',
+            ],
+            'units.*.tiered_prices.*.price' => 'required|numeric|min:0',
+            'units.*.tiered_prices.*.description' => 'nullable|string',
         ]);
 
         // Validasi hanya ada satu base unit
@@ -172,13 +221,28 @@ public function store(Request $request)
 
                 // Tambah unit baru
                 foreach ($request->units as $unitData) {
-                    ProductUnit::create([
+                    $productUnit = ProductUnit::create([
                         'product_id' => $product->id,
                         'unit_id' => $unitData['unit_id'],
                         'price' => $unitData['price'],
                         'conversion_rate' => $unitData['conversion_rate'],
                         'is_base_unit' => $unitData['is_base_unit'] ?? false,
+                        'min_purchase' => $unitData['min_purchase'] ?? 1,
+                        'max_purchase' => $unitData['max_purchase'] ?? null,
+                        'enable_tiered_pricing' => $unitData['enable_tiered_pricing'] ?? false,
                     ]);
+
+                    // Perulangan untuk harga berjenjang (tiered prices) jika diaktifkan (Sama dengan store())
+                    if (($unitData['enable_tiered_pricing'] ?? false) && isset($unitData['tiered_prices']) && is_array($unitData['tiered_prices'])) {
+                        foreach ($unitData['tiered_prices'] as $tieredPriceData) {
+                            TieredPrice::create([
+                                'product_unit_id' => $productUnit->id,
+                                'min_quantity' => $tieredPriceData['min_quantity'],
+                                'price' => $tieredPriceData['price'],
+                                'description' => $tieredPriceData['description'] ?? null,
+                            ]);
+                        }
+                    }
 
                     // Buat stock jika belum ada
                     Stock::firstOrCreate([

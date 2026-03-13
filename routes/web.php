@@ -128,6 +128,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('api')->name('api.')->group(function () {
         Route::get('/products/search', [ProductController::class, 'apiSearch'])->name('products.search');
         Route::get('/products/{product}/units', [ProductController::class, 'getUnits'])->name('products.units');
+        Route::post('/units', [UnitController::class, 'apiStore'])->name('units.store');
         Route::get('/dashboard/stats', [DashboardController::class, 'getStats'])->name('dashboard.stats');
     });
 });

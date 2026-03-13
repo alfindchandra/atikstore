@@ -96,14 +96,19 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Satuan</label>
-                                <select name="units[{{ $index }}][unit_id]" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                    <option value="">Pilih Satuan</option>
-                                    @foreach($units as $unit)
-                                        <option value="{{ $unit->id }}" {{ $productUnit->unit_id == $unit->id ? 'selected' : '' }}>
-                                            {{ $unit->name }} ({{ $unit->symbol }})
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <div class="flex rounded-md shadow-sm mt-1">
+                                    <select name="units[{{ $index }}][unit_id]" required class="unit-select block w-full rounded-l-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                        <option value="">Pilih Satuan</option>
+                                        @foreach($units as $unit)
+                                            <option value="{{ $unit->id }}" {{ $productUnit->unit_id == $unit->id ? 'selected' : '' }}>
+                                                {{ $unit->name }} ({{ $unit->symbol }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <button type="button" onclick="promptNewUnit(this)" class="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 hover:bg-gray-100 transition-colors" title="Tambah Satuan Baru">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
                             </div>
                             
                             <div>
@@ -189,12 +194,17 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Satuan</label>
-                    <select name="units[${index}][unit_id]" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        <option value="">Pilih Satuan</option>
-                        @foreach($units as $unit)
-                            <option value="{{ $unit->id }}">{{ $unit->name }} ({{ $unit->symbol }})</option>
-                        @endforeach
-                    </select>
+                    <div class="flex rounded-md shadow-sm mt-1">
+                        <select name="units[${index}][unit_id]" required class="unit-select block w-full rounded-l-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <option value="">Pilih Satuan</option>
+                            @foreach($units as $unit)
+                                <option value="{{ $unit->id }}">{{ $unit->name }} ({{ $unit->symbol }})</option>
+                            @endforeach
+                        </select>
+                        <button type="button" onclick="promptNewUnit(this)" class="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 hover:bg-gray-100 transition-colors" title="Tambah Satuan Baru">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
                 </div>
                 
                 <div>
@@ -220,5 +230,66 @@ document.addEventListener('DOMContentLoaded', function() {
         return div;
     }
 });
+
+async function promptNewUnit(btnElement) {
+    const { value: formValues } = await Swal.fire({
+        title: 'Tambah Satuan Baru',
+        html:
+            '<div class="text-left mt-3">' +
+            '<label class="block text-sm font-medium text-gray-700">Nama Satuan <span class="text-red-500">*</span></label>' +
+            '<input id="swal-unit-name" class="swal2-input !mt-1 !w-full" placeholder="Cth: Setengah Kilo">' +
+            '<label class="block mt-4 text-sm font-medium text-gray-700">Simbol <span class="text-red-500">*</span></label>' +
+            '<input id="swal-unit-symbol" class="swal2-input !mt-1 !w-full" placeholder="Cth: 1/2kg">' +
+            '</div>',
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Simpan',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#4f46e5',
+        preConfirm: () => {
+            const name = document.getElementById('swal-unit-name').value;
+            const symbol = document.getElementById('swal-unit-symbol').value;
+            if (!name || !symbol) {
+                Swal.showValidationMessage('Nama dan Simbol satuan wajib diisi!');
+                return false;
+            }
+            return { name: name, symbol: symbol }
+        }
+    });
+
+    if (formValues) {
+        try {
+            const response = await fetch('/api/units', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify(formValues)
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                // Tambahkan unit baru ke SELURUH select element di halaman saat ini
+                const unitSelects = document.querySelectorAll('.unit-select');
+                unitSelects.forEach(select => {
+                    const option = new Option(`${result.data.name} (${result.data.symbol})`, result.data.id);
+                    select.add(option);
+                });
+
+                // Pilih otomatis (auto-select) unit yang baru dibuat pada baris tombol yang sedang diklik
+                const currentRowSelect = btnElement.closest('.flex').querySelector('.unit-select');
+                currentRowSelect.value = result.data.id;
+                
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Satuan baru ditambahkan.', timer: 1500, showConfirmButton: false });
+            } else {
+                Swal.fire('Gagal', result.message || 'Terjadi kesalahan sistem', 'error');
+            }
+        } catch (error) {
+            Swal.fire('Gagal', 'Gagal memproses permintaan', 'error');
+        }
+    }
+}
 </script>
 @endsection
